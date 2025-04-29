@@ -33,7 +33,7 @@ uint8_t memory_read(uint16_t address, uint8_t *memory, PPU *ppu) {
 
     // Controller Shift Registers
     if (address == 0x4016 || address == 0x4017) {
-        DEBUG_MSG_MEM("Reading from controller"); // DEBUG
+       
     }
 
     if (address <= 0x1FFF) { // Mirror internal RAM
@@ -65,7 +65,7 @@ void memory_write(uint16_t address, uint8_t value, uint8_t *memory, PPU *ppu) {
 
     // Controller Shift Registers
     if (address == 0x4016 || address == 0x4017) {
-        DEBUG_MSG_MEM("Writing [%02X] to controller", value); // DEBUG
+        
     }
 
     if (address <= 0x1FFF) { // Mirror internal RAM
