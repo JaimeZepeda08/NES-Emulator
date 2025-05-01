@@ -34,9 +34,9 @@ CPU *cpu_init(uint8_t *memory) {
     cpu->A = 0;
     cpu->X = 0;
     cpu->Y = 0;
-    cpu->PC = memory[0xFFFC] | (memory[0xFFFD] << 8); // reset vector at 0xFFFC and 0xFFFD (little endian) // 0xC000
+    cpu->PC = 0xC000; // memory[0xFFFC] | (memory[0xFFFD] << 8); // reset vector at 0xFFFC and 0xFFFD (little endian) // 0xC000
     cpu->S = 0xFD; 
-    cpu->P = 0x34; // 0011 0100
+    cpu->P = 0x24;
 
     cpu->cycles = 0;
     cpu->page_crossed = 0;
@@ -676,7 +676,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
         }
 
         case 0x71: { // ADC (Indirect), Y
-            uint16_t effective_addr = cpu_absolute_y(opcode, "ADC", cpu, memory, ppu);
+            uint16_t effective_addr = cpu_indirect_y(opcode, "ADC", cpu, memory, ppu);
             uint8_t operand = memory_read(effective_addr, memory, ppu);
             uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
             uint16_t result = cpu->A + operand + carry_in;
@@ -697,6 +697,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
         // ======== SBC ======== 
 
+        case 0xEB: // Unofficial Opcode
         case 0xE9: { // SBC #Immediate
             uint8_t operand = memory_read(cpu->PC++, memory, ppu);
             DEBUG_MSG_CPU("Executing instruction [SBC #Immediate]: %02X %02X", opcode, operand);
@@ -704,8 +705,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
             uint16_t result = cpu->A + ~operand + carry_in;
 
-            cpu->P = (result > 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-            cpu->P = (((cpu->A ^ result) & (operand ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
+            cpu->P = (result <= 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->P = (((cpu->A ^ operand) & (cpu->A ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
 
             cpu->A = (uint8_t) result;
 
@@ -722,8 +723,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
             uint16_t result = cpu->A + ~operand + carry_in;
 
-            cpu->P = (result > 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-            cpu->P = (((cpu->A ^ result) & (operand ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
+            cpu->P = (result <= 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->P = (((cpu->A ^ operand) & (cpu->A ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
 
             cpu->A = (uint8_t) result;
 
@@ -740,8 +741,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
             uint16_t result = cpu->A + ~operand + carry_in;
 
-            cpu->P = (result > 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-            cpu->P = (((cpu->A ^ result) & (operand ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
+            cpu->P = (result <= 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->P = (((cpu->A ^ operand) & (cpu->A ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
 
             cpu->A = (uint8_t) result;
 
@@ -758,8 +759,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
             uint16_t result = cpu->A + ~operand + carry_in;
 
-            cpu->P = (result > 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-            cpu->P = (((cpu->A ^ result) & (operand ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
+            cpu->P = (result <= 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->P = (((cpu->A ^ operand) & (cpu->A ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
 
             cpu->A = (uint8_t) result;
 
@@ -776,8 +777,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
             uint16_t result = cpu->A + ~operand + carry_in;
 
-            cpu->P = (result > 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-            cpu->P = (((cpu->A ^ result) & (operand ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
+            cpu->P = (result <= 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->P = (((cpu->A ^ operand) & (cpu->A ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
 
             cpu->A = (uint8_t) result;
 
@@ -797,8 +798,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
             uint16_t result = cpu->A + ~operand + carry_in;
 
-            cpu->P = (result > 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-            cpu->P = (((cpu->A ^ result) & (operand ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
+            cpu->P = (result <= 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->P = (((cpu->A ^ operand) & (cpu->A ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
 
             cpu->A = (uint8_t) result;
 
@@ -818,8 +819,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
             uint16_t result = cpu->A + ~operand + carry_in;
 
-            cpu->P = (result > 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-            cpu->P = (((cpu->A ^ result) & (operand ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
+            cpu->P = (result <= 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->P = (((cpu->A ^ operand) & (cpu->A ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
 
             cpu->A = (uint8_t) result;
 
@@ -836,8 +837,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
             uint16_t result = cpu->A + ~operand + carry_in;
 
-            cpu->P = (result > 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-            cpu->P = (((cpu->A ^ result) & (operand ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
+            cpu->P = (result <= 0xFF) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->P = (((cpu->A ^ operand) & (cpu->A ^ result) & 0x80) != 0) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
 
             cpu->A = (uint8_t) result;
 
@@ -1235,19 +1236,17 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
         case 0x6A: { // ROR Accumulator
             DEBUG_MSG_CPU("Executing instruction [ROR Accumulator]: %02X", opcode);
-
-            // Carry Flag
-            uint8_t carry = cpu->A & 0x01;
-            cpu->P = (carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-
-            // Rotate Right
+        
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            uint8_t new_carry = cpu->A & 0x01;
+        
             cpu->A >>= 1;
-            cpu->A |= (carry << 7);
-
-            // Set flags
+            cpu->A |= (old_carry << 7);
+        
+            cpu->P = (new_carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+        
             update_zero_and_negative_flags(cpu, cpu->A);
-
-            // Set cycles
+        
             cpu->cycles = 2;
             break;
         }
@@ -1255,40 +1254,37 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
         case 0x66: { // ROR Zero Page
             uint16_t effective_addr = cpu_zero_page(opcode, "ROR", cpu, memory, ppu);
             uint8_t value = memory_read(effective_addr, memory, ppu);
-
-            // Carry Flag
-            uint8_t carry = value & 0x01;
-            cpu->P = (carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-
-            // Rotate Right
+        
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            uint8_t new_carry = value & 0x01;
+        
             value >>= 1;
-            value |= (carry << 7);
-
+            value |= (old_carry << 7);
+        
             memory_write(effective_addr, value, memory, ppu);
-
-            // Set flags
+        
+            cpu->P = (new_carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+        
             update_zero_and_negative_flags(cpu, value);
-
-            // Set cycles
+        
             cpu->cycles = 5;
             break;
-        }
+        }        
 
         case 0x76: { // ROR Zero Page, X
             uint16_t effective_addr = cpu_zero_page_x(opcode, "ROR", cpu, memory, ppu);
             uint8_t value = memory_read(effective_addr, memory, ppu);
 
-            // Carry Flag
-            uint8_t carry = value & 0x01;
-            cpu->P = (carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-
-            // Rotate Right
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            uint8_t new_carry = value & 0x01;
+        
             value >>= 1;
-            value |= (carry << 7);
-
+            value |= (old_carry << 7);
+        
             memory_write(effective_addr, value, memory, ppu);
-
-            // Set flags
+        
+            cpu->P = (new_carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+        
             update_zero_and_negative_flags(cpu, value);
 
             // Set cycles
@@ -1300,17 +1296,16 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint16_t effective_addr = cpu_absolute(opcode, "ROR", cpu, memory, ppu);
             uint8_t value = memory_read(effective_addr, memory, ppu);
 
-            // Carry Flag
-            uint8_t carry = value & 0x01;
-            cpu->P = (carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-
-            // Rotate Right
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            uint8_t new_carry = value & 0x01;
+        
             value >>= 1;
-            value |= (carry << 7);
-
+            value |= (old_carry << 7);
+        
             memory_write(effective_addr, value, memory, ppu);
-
-            // Set flags
+        
+            cpu->P = (new_carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+        
             update_zero_and_negative_flags(cpu, value);
 
             // Set cycles
@@ -1322,17 +1317,16 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             uint16_t effective_addr = cpu_absolute_x(opcode, "ROR", cpu, memory, ppu);
             uint8_t value = memory_read(effective_addr, memory, ppu);
 
-            // Carry Flag
-            uint8_t carry = value & 0x01;
-            cpu->P = (carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
-
-            // Rotate Right
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            uint8_t new_carry = value & 0x01;
+        
             value >>= 1;
-            value |= (carry << 7);
-
+            value |= (old_carry << 7);
+        
             memory_write(effective_addr, value, memory, ppu);
-
-            // Set flags
+        
+            cpu->P = (new_carry) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+        
             update_zero_and_negative_flags(cpu, value);
 
             // Set cycles
@@ -2012,10 +2006,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
         }
         
         case 0xE4: { // CPX Zero Page
-            uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
-            DEBUG_MSG_CPU("Executing instruction [CPX ZeroPage]: %02X %02X", opcode, zero_addr);
-        
-            uint16_t effective_addr = (uint16_t) zero_addr;
+            uint16_t effective_addr = cpu_zero_page(opcode, "CPX", cpu, memory, ppu);
             uint8_t value = memory_read(effective_addr, memory, ppu);
         
             uint8_t result = cpu->X - value;
@@ -2030,11 +2021,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
         }
         
         case 0xEC: { // CPX Absolute
-            uint8_t low = memory_read(cpu->PC++, memory, ppu);
-            uint8_t high = memory_read(cpu->PC++, memory, ppu); 
-            DEBUG_MSG_CPU("Executing instruction [CPX Absolute]: %02X %02X %02X", opcode, low, high);
-
-            uint16_t effective_addr = (high << 8) | low;   
+            uint16_t effective_addr = cpu_absolute(opcode, "CPX", cpu, memory, ppu);
             uint8_t value = memory_read(effective_addr, memory, ppu);
             uint8_t result = cpu->X - value;
         
@@ -2065,10 +2052,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
         }
         
         case 0xC4: { // CPY Zero Page
-            uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
-            DEBUG_MSG_CPU("Executing instruction [CPY ZeroPage]: %02X %02X", opcode, zero_addr);
-        
-            uint16_t effective_addr = (uint16_t) zero_addr;
+            uint16_t effective_addr = cpu_zero_page(opcode, "CPY", cpu, memory, ppu);
             uint8_t value = memory_read(effective_addr, memory, ppu);
         
             uint8_t result = cpu->Y - value;
@@ -2083,11 +2067,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
         }
         
         case 0xCC: { // CPY Absolute
-            uint8_t low = memory_read(cpu->PC++, memory, ppu);
-            uint8_t high = memory_read(cpu->PC++, memory, ppu); 
-            DEBUG_MSG_CPU("Executing instruction [CPY Absolute]: %02X %02X %02X", opcode, low, high);
-
-            uint16_t effective_addr = (high << 8) | low;   
+            uint16_t effective_addr = cpu_absolute(opcode, "CPY", cpu, memory, ppu);
             uint8_t value = memory_read(effective_addr, memory, ppu);
             uint8_t result = cpu->Y - value;
         
@@ -2445,6 +2425,1288 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             break;
         }
 
+        // ==================== Unofficial Opcodes ==================== 
+
+        // ======== SLO ======== 
+
+        case 0x07: { // SLO Zero Page
+            uint16_t effective_addr = cpu_zero_page(opcode, "SLO", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Arithmetic Shift Left
+            value <<= 1;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // OR result with A and store back in A
+            cpu->A |= value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            // set cycles
+            cpu->cycles = 5;
+            break;
+        }
+
+        case 0x17: { // SLO Zero Page, X
+            uint16_t effective_addr = cpu_zero_page_x(opcode, "SLO", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Arithmetic Shift Left
+            value <<= 1;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // OR result with A and store back in A
+            cpu->A |= value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            // set cycles
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0x0F: { // SLO Absolute
+            uint16_t effective_addr = cpu_absolute(opcode, "SLO", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Arithmetic Shift Left
+            value <<= 1;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // OR result with A and store back in A
+            cpu->A |= value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            // set cycles
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0x1F: { // SLO Absolute, X
+            uint16_t effective_addr = cpu_absolute_x(opcode, "SLO", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Arithmetic Shift Left
+            value <<= 1;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // OR result with A and store back in A
+            cpu->A |= value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            // set cycles
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0x1B: { // SLO Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "SLO", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Arithmetic Shift Left
+            value <<= 1;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // OR result with A and store back in A
+            cpu->A |= value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            // set cycles
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0x03: { // SLO (Indirect, X)
+            uint16_t effective_addr = cpu_indirect_x(opcode, "SLO", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Arithmetic Shift Left
+            value <<= 1;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // OR result with A and store back in A
+            cpu->A |= value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            // set cycles
+            cpu->cycles = 8;
+            break;
+        }
+
+        case 0x13: { // SLO (Indirect), Y
+            uint16_t effective_addr = cpu_indirect_y(opcode, "SLO", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Arithmetic Shift Left
+            value <<= 1;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // OR result with A and store back in A
+            cpu->A |= value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            // set cycles
+            cpu->cycles = 8;
+            break;
+        }
+
+        // ======== LAX ======== 
+
+        case 0xAB: { // LAX Immediate (Highly Unstable)
+            uint8_t value = memory_read(cpu->PC++, memory, ppu);
+            DEBUG_MSG_CPU("Executing instruction [LAX]: %02X %02X", opcode, value);
+            cpu->A = cpu->X = value;
+        
+            update_zero_and_negative_flags(cpu, value);
+            cpu->cycles = 2;
+            break;
+        }        
+
+        case 0xA7: { // LAX Zero Page
+            uint16_t effective_addr = cpu_zero_page(opcode, "LAX", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            cpu->A = value;
+            cpu->X = value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            cpu->cycles = 3;
+            break;
+        }
+
+        case 0xB7: { // LAX Zero Page, Y
+            uint16_t effective_addr = cpu_zero_page_y(opcode, "LAX", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            cpu->A = value;
+            cpu->X = value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            cpu->cycles = 4;
+            break;
+        }
+
+        case 0xAF: { // LAX Absolute
+            uint16_t effective_addr = cpu_absolute(opcode, "LAX", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            cpu->A = value;
+            cpu->X = value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            cpu->cycles = 4;
+            break;
+        }
+
+        case 0xBF: { // LAX Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "LAX", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            cpu->A = value;
+            cpu->X = value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            cpu->cycles = 4;
+            if (cpu->page_crossed) {
+                cpu->cycles += 1;
+            }
+            break;
+        }
+
+        case 0xA3: { // LAX (Indirect, X)
+            uint16_t effective_addr = cpu_indirect_x(opcode, "LAX", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            cpu->A = value;
+            cpu->X = value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0xB3: { // LAX (Indirect), Y
+            uint16_t effective_addr = cpu_indirect_y(opcode, "LAX", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            cpu->A = value;
+            cpu->X = value;
+
+            update_zero_and_negative_flags(cpu, value);
+
+            cpu->cycles = 5;
+            if (cpu->page_crossed) {
+                cpu->cycles += 1;
+            }
+            break;
+        }
+
+        // ======== SAX ======== 
+
+        case 0x87: { // SAX Zero Page
+            uint16_t effective_addr = cpu_zero_page(opcode, "SAX", cpu, memory, ppu);
+
+            // Store A & X into memory
+            uint8_t result = cpu->A & cpu->X;
+            memory_write(effective_addr, result, memory, ppu);
+
+            // Set cycles
+            cpu->cycles = 3;
+            break;
+        }
+
+        case 0x97: { // SAX Zero Page, Y
+            uint16_t effective_addr = cpu_zero_page_y(opcode, "SAX", cpu, memory, ppu);
+            
+            // Store A & X into memory
+            uint8_t result = cpu->A & cpu->X;
+            memory_write(effective_addr, result, memory, ppu);
+
+            // Set cycles
+            cpu->cycles = 4;
+            break;
+        }
+
+        case 0x8F: { // SAX Absolute
+            uint16_t effective_addr = cpu_absolute(opcode, "SAX", cpu, memory, ppu);
+            
+            // Store A & X into memory
+            uint8_t result = cpu->A & cpu->X;
+            memory_write(effective_addr, result, memory, ppu);
+
+            // Set cycles
+            cpu->cycles = 4;
+            break;
+        }
+
+        case 0x83: { // SAX (Indirect, X)
+            uint16_t effective_addr = cpu_indirect_x(opcode, "SAX", cpu, memory, ppu);
+            
+            // Store A & X into memory
+            uint8_t result = cpu->A & cpu->X;
+            memory_write(effective_addr, result, memory, ppu);
+
+            // Set cycles
+            cpu->cycles = 6;
+            break;
+        }
+
+        // ======== DCP ======== 
+
+        case 0xC7: { // DCP Zero Page
+            uint16_t effective_addr = cpu_zero_page(opcode, "DCP", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            value--; // Decrement memory
+            memory_write(effective_addr, value, memory, ppu);
+
+            // Perform CMP (A - value)
+            uint8_t result = cpu->A - value;
+
+            // Set Carry Flag if A >= M
+            cpu->P = (cpu->A >= value) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            update_zero_and_negative_flags(cpu, result);
+
+            cpu->cycles = 5;
+            break;
+        }
+
+        case 0xD7: { // DCP Zero Page, X
+            uint16_t effective_addr = cpu_zero_page_x(opcode, "DCP", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            value--; // Decrement memory
+            memory_write(effective_addr, value, memory, ppu);
+
+            // Perform CMP (A - value)
+            uint8_t result = cpu->A - value;
+
+            // Set Carry Flag if A >= M
+            cpu->P = (cpu->A >= value) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            update_zero_and_negative_flags(cpu, result);
+
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0xCF: { // DCP Absolute
+            uint16_t effective_addr = cpu_absolute(opcode, "DCP", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            value--; // Decrement memory
+            memory_write(effective_addr, value, memory, ppu);
+
+            // Perform CMP (A - value)
+            uint8_t result = cpu->A - value;
+
+            // Set Carry Flag if A >= M
+            cpu->P = (cpu->A >= value) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            update_zero_and_negative_flags(cpu, result);
+
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0xDF: { // DCP Absolute, X
+            uint16_t effective_addr = cpu_absolute_x(opcode, "DCP", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            value--; // Decrement memory
+            memory_write(effective_addr, value, memory, ppu);
+
+            // Perform CMP (A - value)
+            uint8_t result = cpu->A - value;
+
+            // Set Carry Flag if A >= M
+            cpu->P = (cpu->A >= value) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            update_zero_and_negative_flags(cpu, result);
+
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0xDB: { // DCP Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "DCP", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            value--; // Decrement memory
+            memory_write(effective_addr, value, memory, ppu);
+
+            // Perform CMP (A - value)
+            uint8_t result = cpu->A - value;
+
+            // Set Carry Flag if A >= M
+            cpu->P = (cpu->A >= value) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            update_zero_and_negative_flags(cpu, result);
+
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0xC3: { // DCP (Indirect, X)
+            uint16_t effective_addr = cpu_indirect_x(opcode, "DCP", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            value--; // Decrement memory
+            memory_write(effective_addr, value, memory, ppu);
+
+            // Perform CMP (A - value)
+            uint8_t result = cpu->A - value;
+
+            // Set Carry Flag if A >= M
+            cpu->P = (cpu->A >= value) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            update_zero_and_negative_flags(cpu, result);
+
+            cpu->cycles = 8;
+            break;
+        }
+
+        case 0xD3: { // DCP (Indirect), Y
+            uint16_t effective_addr = cpu_indirect_y(opcode, "DCP", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            value--; // Decrement memory
+            memory_write(effective_addr, value, memory, ppu);
+
+            // Perform CMP (A - value)
+            uint8_t result = cpu->A - value;
+
+            // Set Carry Flag if A >= M
+            cpu->P = (cpu->A >= value) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            update_zero_and_negative_flags(cpu, result);
+
+            cpu->cycles = 8;
+            break;
+        }
+
+        // ======== ISC ======== 
+
+        case 0xE7: { // ISC Zero Page
+            uint16_t effective_addr = cpu_zero_page(opcode, "ISC", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            value += 1; // Increment memory
+            memory_write(effective_addr, value, memory, ppu);
+        
+            // Perform SBC with incremented value
+            uint8_t inverted = ~value;
+            uint16_t sum = cpu->A + inverted + (cpu->P & FLAG_CARRY ? 1 : 0);
+        
+            // Set flags
+            cpu->P = (cpu->P & ~FLAG_CARRY) | (sum > 0xFF ? FLAG_CARRY : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) | (((cpu->A ^ sum) & 0x80) && ((cpu->A ^ inverted) & 0x80) ? FLAG_OVERFLOW : 0);
+        
+            cpu->A = (uint8_t)sum;
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 5;
+            break;
+        }
+
+        case 0xF7: { // ISC Zero Page, X
+            uint16_t effective_addr = cpu_zero_page_x(opcode, "ISC", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            value += 1; // Increment memory
+            memory_write(effective_addr, value, memory, ppu);
+        
+            // Perform SBC with incremented value
+            uint8_t inverted = ~value;
+            uint16_t sum = cpu->A + inverted + (cpu->P & FLAG_CARRY ? 1 : 0);
+        
+            // Set flags
+            cpu->P = (cpu->P & ~FLAG_CARRY) | (sum > 0xFF ? FLAG_CARRY : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) | (((cpu->A ^ sum) & 0x80) && ((cpu->A ^ inverted) & 0x80) ? FLAG_OVERFLOW : 0);
+        
+            cpu->A = (uint8_t)sum;
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0xEF: { // ISC Absolute
+            uint16_t effective_addr = cpu_absolute(opcode, "ISC", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            value += 1; // Increment memory
+            memory_write(effective_addr, value, memory, ppu);
+        
+            // Perform SBC with incremented value
+            uint8_t inverted = ~value;
+            uint16_t sum = cpu->A + inverted + (cpu->P & FLAG_CARRY ? 1 : 0);
+        
+            // Set flags
+            cpu->P = (cpu->P & ~FLAG_CARRY) | (sum > 0xFF ? FLAG_CARRY : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) | (((cpu->A ^ sum) & 0x80) && ((cpu->A ^ inverted) & 0x80) ? FLAG_OVERFLOW : 0);
+        
+            cpu->A = (uint8_t)sum;
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0xFF: { // ISC Absolute, X
+            uint16_t effective_addr = cpu_absolute_x(opcode, "ISC", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            value += 1; // Increment memory
+            memory_write(effective_addr, value, memory, ppu);
+        
+            // Perform SBC with incremented value
+            uint8_t inverted = ~value;
+            uint16_t sum = cpu->A + inverted + (cpu->P & FLAG_CARRY ? 1 : 0);
+        
+            // Set flags
+            cpu->P = (cpu->P & ~FLAG_CARRY) | (sum > 0xFF ? FLAG_CARRY : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) | (((cpu->A ^ sum) & 0x80) && ((cpu->A ^ inverted) & 0x80) ? FLAG_OVERFLOW : 0);
+        
+            cpu->A = (uint8_t)sum;
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0xFB: { // ISC Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "ISC", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            value += 1; // Increment memory
+            memory_write(effective_addr, value, memory, ppu);
+        
+            // Perform SBC with incremented value
+            uint8_t inverted = ~value;
+            uint16_t sum = cpu->A + inverted + (cpu->P & FLAG_CARRY ? 1 : 0);
+        
+            // Set flags
+            cpu->P = (cpu->P & ~FLAG_CARRY) | (sum > 0xFF ? FLAG_CARRY : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) | (((cpu->A ^ sum) & 0x80) && ((cpu->A ^ inverted) & 0x80) ? FLAG_OVERFLOW : 0);
+        
+            cpu->A = (uint8_t)sum;
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0xE3: { // ISC (Indirect, X)
+            uint16_t effective_addr = cpu_indirect_x(opcode, "ISC", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            value += 1; // Increment memory
+            memory_write(effective_addr, value, memory, ppu);
+        
+            // Perform SBC with incremented value
+            uint8_t inverted = ~value;
+            uint16_t sum = cpu->A + inverted + (cpu->P & FLAG_CARRY ? 1 : 0);
+        
+            // Set flags
+            cpu->P = (cpu->P & ~FLAG_CARRY) | (sum > 0xFF ? FLAG_CARRY : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) | (((cpu->A ^ sum) & 0x80) && ((cpu->A ^ inverted) & 0x80) ? FLAG_OVERFLOW : 0);
+        
+            cpu->A = (uint8_t)sum;
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 8;
+            break;
+        }
+
+        case 0xF3: { // ISC (Indirect), Y
+            uint16_t effective_addr = cpu_indirect_y(opcode, "ISC", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            value += 1; // Increment memory
+            memory_write(effective_addr, value, memory, ppu);
+        
+            // Perform SBC with incremented value
+            uint8_t inverted = ~value;
+            uint16_t sum = cpu->A + inverted + (cpu->P & FLAG_CARRY ? 1 : 0);
+        
+            // Set flags
+            cpu->P = (cpu->P & ~FLAG_CARRY) | (sum > 0xFF ? FLAG_CARRY : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) | (((cpu->A ^ sum) & 0x80) && ((cpu->A ^ inverted) & 0x80) ? FLAG_OVERFLOW : 0);
+        
+            cpu->A = (uint8_t)sum;
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 8;
+            break;
+        }
+
+        // ======== RLA ======== 
+
+        case 0x27: { // RLA Zero Page
+            uint16_t effective_addr = cpu_zero_page(opcode, "RLA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Rotate Left through Carry
+            uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value << 1) | carry_in;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // AND with accumulator
+            cpu->A &= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 5;
+            break;
+        }
+
+        case 0x37: { // RLA Zero Page, X
+            uint16_t effective_addr = cpu_zero_page_x(opcode, "RLA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Rotate Left through Carry
+            uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value << 1) | carry_in;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // AND with accumulator
+            cpu->A &= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0x2F: { // RLA Absolute
+            uint16_t effective_addr = cpu_absolute(opcode, "RLA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Rotate Left through Carry
+            uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value << 1) | carry_in;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // AND with accumulator
+            cpu->A &= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0x3F: { // RLA Absolute, X
+            uint16_t effective_addr = cpu_absolute_x(opcode, "RLA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Rotate Left through Carry
+            uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value << 1) | carry_in;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // AND with accumulator
+            cpu->A &= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0x3B: { // RLA Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "RLA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Rotate Left through Carry
+            uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value << 1) | carry_in;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // AND with accumulator
+            cpu->A &= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0x23: { // RLA (Indirect, X)
+            uint16_t effective_addr = cpu_indirect_x(opcode, "RLA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Rotate Left through Carry
+            uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value << 1) | carry_in;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // AND with accumulator
+            cpu->A &= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 8;
+            break;
+        }
+
+        case 0x33: { // RLA (Indirect), Y
+            uint16_t effective_addr = cpu_indirect_y(opcode, "RLA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Rotate Left through Carry
+            uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
+            cpu->P = (value & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value << 1) | carry_in;
+
+            memory_write(effective_addr, value, memory, ppu);
+
+            // AND with accumulator
+            cpu->A &= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 8;
+            break;
+        }
+
+        // ======== SRE ======== 
+
+        case 0x47: { // SRE Zero Page
+            uint16_t effective_addr = cpu_zero_page(opcode, "SRE", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag from bit 0 before shift
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Logical Shift Right
+            value >>= 1;
+            memory_write(effective_addr, value, memory, ppu);
+
+            // EOR with accumulator
+            cpu->A ^= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 5;
+            break;
+        }
+
+        case 0x57: { // SRE Zero Page, X
+            uint16_t effective_addr = cpu_zero_page_x(opcode, "SRE", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag from bit 0 before shift
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Logical Shift Right
+            value >>= 1;
+            memory_write(effective_addr, value, memory, ppu);
+
+            // EOR with accumulator
+            cpu->A ^= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0x4F: { // SRE Absolute
+            uint16_t effective_addr = cpu_absolute(opcode, "SRE", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag from bit 0 before shift
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Logical Shift Right
+            value >>= 1;
+            memory_write(effective_addr, value, memory, ppu);
+
+            // EOR with accumulator
+            cpu->A ^= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 6;
+            break;
+        }
+
+        case 0x5F: { // SRE Absolute, X
+            uint16_t effective_addr = cpu_absolute_x(opcode, "SRE", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag from bit 0 before shift
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Logical Shift Right
+            value >>= 1;
+            memory_write(effective_addr, value, memory, ppu);
+
+            // EOR with accumulator
+            cpu->A ^= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0x5B: { // SRE Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "SRE", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag from bit 0 before shift
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Logical Shift Right
+            value >>= 1;
+            memory_write(effective_addr, value, memory, ppu);
+
+            // EOR with accumulator
+            cpu->A ^= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 7;
+            break;
+        }
+
+        case 0x43: { // SRE (Indirect, X)
+            uint16_t effective_addr = cpu_indirect_x(opcode, "SRE", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag from bit 0 before shift
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Logical Shift Right
+            value >>= 1;
+            memory_write(effective_addr, value, memory, ppu);
+
+            // EOR with accumulator
+            cpu->A ^= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 8;
+            break;
+        }
+
+        case 0x53: { // SRE (Indirect), Y
+            uint16_t effective_addr = cpu_indirect_y(opcode, "SRE", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+
+            // Carry Flag from bit 0 before shift
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+
+            // Logical Shift Right
+            value >>= 1;
+            memory_write(effective_addr, value, memory, ppu);
+
+            // EOR with accumulator
+            cpu->A ^= value;
+
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 8;
+            break;
+        }
+
+        // ======== RRA ======== 
+
+        case 0x67: { // RRA Zero Page
+            uint16_t effective_addr = cpu_zero_page(opcode, "RRA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            // Rotate Right
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 0x80 : 0;
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value >> 1) | old_carry;
+        
+            memory_write(effective_addr, value, memory, ppu);
+        
+            // ADC logic
+            uint16_t sum = cpu->A + value + ((cpu->P & FLAG_CARRY) ? 1 : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) |
+                     (((cpu->A ^ sum) & (value ^ sum) & 0x80) ? FLAG_OVERFLOW : 0);
+            cpu->P = (cpu->P & ~FLAG_CARRY) |
+                     ((sum > 0xFF) ? FLAG_CARRY : 0);
+        
+            cpu->A = sum & 0xFF;
+            update_zero_and_negative_flags(cpu, cpu->A);
+        
+            cpu->cycles = 5;
+            break;
+        }
+        
+        case 0x77: { // RRA Zero Page, X
+            uint16_t effective_addr = cpu_zero_page_x(opcode, "RRA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 0x80 : 0;
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value >> 1) | old_carry;
+        
+            memory_write(effective_addr, value, memory, ppu);
+        
+            uint16_t sum = cpu->A + value + ((cpu->P & FLAG_CARRY) ? 1 : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) |
+                     (((cpu->A ^ sum) & (value ^ sum) & 0x80) ? FLAG_OVERFLOW : 0);
+            cpu->P = (cpu->P & ~FLAG_CARRY) |
+                     ((sum > 0xFF) ? FLAG_CARRY : 0);
+        
+            cpu->A = sum & 0xFF;
+            update_zero_and_negative_flags(cpu, cpu->A);
+        
+            cpu->cycles = 6;
+            break;
+        }
+        
+        case 0x6F: { // RRA Absolute
+            uint16_t effective_addr = cpu_absolute(opcode, "RRA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 0x80 : 0;
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value >> 1) | old_carry;
+        
+            memory_write(effective_addr, value, memory, ppu);
+        
+            uint16_t sum = cpu->A + value + ((cpu->P & FLAG_CARRY) ? 1 : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) |
+                     (((cpu->A ^ sum) & (value ^ sum) & 0x80) ? FLAG_OVERFLOW : 0);
+            cpu->P = (cpu->P & ~FLAG_CARRY) |
+                     ((sum > 0xFF) ? FLAG_CARRY : 0);
+        
+            cpu->A = sum & 0xFF;
+            update_zero_and_negative_flags(cpu, cpu->A);
+        
+            cpu->cycles = 6;
+            break;
+        }
+        
+        case 0x7F: { // RRA Absolute, X
+            uint16_t effective_addr = cpu_absolute_x(opcode, "RRA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 0x80 : 0;
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value >> 1) | old_carry;
+        
+            memory_write(effective_addr, value, memory, ppu);
+        
+            uint16_t sum = cpu->A + value + ((cpu->P & FLAG_CARRY) ? 1 : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) |
+                     (((cpu->A ^ sum) & (value ^ sum) & 0x80) ? FLAG_OVERFLOW : 0);
+            cpu->P = (cpu->P & ~FLAG_CARRY) |
+                     ((sum > 0xFF) ? FLAG_CARRY : 0);
+        
+            cpu->A = sum & 0xFF;
+            update_zero_and_negative_flags(cpu, cpu->A);
+        
+            cpu->cycles = 7;
+            break;
+        }
+        
+        case 0x7B: { // RRA Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "RRA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 0x80 : 0;
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value >> 1) | old_carry;
+        
+            memory_write(effective_addr, value, memory, ppu);
+        
+            uint16_t sum = cpu->A + value + ((cpu->P & FLAG_CARRY) ? 1 : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) |
+                     (((cpu->A ^ sum) & (value ^ sum) & 0x80) ? FLAG_OVERFLOW : 0);
+            cpu->P = (cpu->P & ~FLAG_CARRY) |
+                     ((sum > 0xFF) ? FLAG_CARRY : 0);
+        
+            cpu->A = sum & 0xFF;
+            update_zero_and_negative_flags(cpu, cpu->A);
+        
+            cpu->cycles = 7;
+            break;
+        }
+        
+        case 0x63: { // RRA (Indirect, X)
+            uint16_t effective_addr = cpu_indirect_x(opcode, "RRA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 0x80 : 0;
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value >> 1) | old_carry;
+        
+            memory_write(effective_addr, value, memory, ppu);
+        
+            uint16_t sum = cpu->A + value + ((cpu->P & FLAG_CARRY) ? 1 : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) |
+                     (((cpu->A ^ sum) & (value ^ sum) & 0x80) ? FLAG_OVERFLOW : 0);
+            cpu->P = (cpu->P & ~FLAG_CARRY) |
+                     ((sum > 0xFF) ? FLAG_CARRY : 0);
+        
+            cpu->A = sum & 0xFF;
+            update_zero_and_negative_flags(cpu, cpu->A);
+        
+            cpu->cycles = 8;
+            break;
+        }
+        
+        case 0x73: { // RRA (Indirect), Y
+            uint16_t effective_addr = cpu_indirect_y(opcode, "RRA", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu);
+        
+            uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 0x80 : 0;
+            cpu->P = (value & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            value = (value >> 1) | old_carry;
+        
+            memory_write(effective_addr, value, memory, ppu);
+        
+            uint16_t sum = cpu->A + value + ((cpu->P & FLAG_CARRY) ? 1 : 0);
+            cpu->P = (cpu->P & ~FLAG_OVERFLOW) |
+                     (((cpu->A ^ sum) & (value ^ sum) & 0x80) ? FLAG_OVERFLOW : 0);
+            cpu->P = (cpu->P & ~FLAG_CARRY) |
+                     ((sum > 0xFF) ? FLAG_CARRY : 0);
+        
+            cpu->A = sum & 0xFF;
+            update_zero_and_negative_flags(cpu, cpu->A);
+        
+            cpu->cycles = 8;
+            break;
+        }
+        
+        // ======== ANC ======== 
+        
+        case 0x0B: 
+        case 0x2B: { // ANC Immediate
+            uint8_t value = memory_read(cpu->PC++, memory, ppu);
+            DEBUG_MSG_CPU("Executing instruction [ANC]: %02X %02X", opcode, value);
+            cpu->A &= value;
+
+            // Set Carry to bit 7 of result
+            cpu->P = (cpu->A & 0x80) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            update_zero_and_negative_flags(cpu, cpu->A);
+
+            cpu->cycles = 2;
+            break;
+        }
+
+        // ======== ALR ======== 
+
+        case 0x4B: { // ALR Immediate
+            uint8_t value = memory_read(cpu->PC++, memory, ppu);
+            DEBUG_MSG_CPU("Executing instruction [ALR]: %02X %02X", opcode, value);
+            cpu->A &= value;
+        
+            // Set Carry to bit 0 before shift
+            cpu->P = (cpu->A & 0x01) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+        
+            // Logical Shift Right
+            cpu->A >>= 1;
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+            cpu->cycles = 2;
+            break;
+        }
+
+        // ======== ARR ======== 
+        
+        case 0x6B: { // ARR Immediate
+            uint8_t value = memory_read(cpu->PC++, memory, ppu);
+            DEBUG_MSG_CPU("Executing instruction [ARR]: %02X %02X", opcode, value);
+            cpu->A &= value;
+        
+            // Rotate Right through Carry
+            uint8_t carry = (cpu->P & FLAG_CARRY) ? 0x80 : 0x00;
+            uint8_t result = (cpu->A >> 1) | carry;
+            cpu->A = result;
+        
+            // Set Carry to bit 6, Overflow from bits 6 and 5
+            cpu->P = (result & 0x40) ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->P = ((result ^ (result << 1)) & 0x40) ? (cpu->P | FLAG_OVERFLOW) : (cpu->P & ~FLAG_OVERFLOW);
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+            cpu->cycles = 2;
+            break;
+        }
+
+        // ======== XAA ======== 
+
+        case 0x8B: { // XAA Immediate (highly unstable)
+            uint8_t value = memory_read(cpu->PC++, memory, ppu);
+            DEBUG_MSG_CPU("Executing instruction [XXA]: %02X %02X", opcode, value);
+        
+            // Output is AND of A, X, and immediate
+            cpu->A = (cpu->A & cpu->X) & value;
+        
+            update_zero_and_negative_flags(cpu, cpu->A);
+            cpu->cycles = 2;
+            break;
+        }
+
+        // ======== AXS ======== 
+
+        case 0xCB: { // AXS Immediate
+            uint8_t value = memory_read(cpu->PC++, memory, ppu);
+            DEBUG_MSG_CPU("Executing instruction [AXS]: %02X %02X", opcode, value);
+            uint8_t result = cpu->X & cpu->A;
+            result -= value;
+        
+            // Set Carry if result did not borrow
+            cpu->P = (cpu->X & cpu->A) >= value ? (cpu->P | FLAG_CARRY) : (cpu->P & ~FLAG_CARRY);
+            cpu->X = result;
+        
+            update_zero_and_negative_flags(cpu, result);
+            cpu->cycles = 2;
+            break;
+        }   
+        
+        // ======== AHX ======== 
+        
+        case 0x93: { // AHX (Indirect), Y
+            uint16_t effective_addr = cpu_indirect_y(opcode, "AHX", cpu, memory, ppu);
+            uint16_t temp = ((effective_addr >> 8) + 1) & 0xFF;
+            uint8_t value = cpu->A & cpu->X & temp;
+            memory_write(effective_addr, value, memory, ppu);
+            cpu->cycles = 8;
+            break;
+        }    
+        
+        // ======== SHY ======== 
+
+        case 0x9C: { // SHY Absolute, X
+            uint16_t effective_addr = cpu_absolute_x(opcode, "SHY", cpu, memory, ppu);
+            uint8_t value = cpu->Y & ((effective_addr >> 8) + 1);
+            memory_write(effective_addr, value, memory, ppu);
+            cpu->cycles = 5;
+            break;
+        }
+
+        // ======== AHX ======== 
+
+        case 0x9F: { // AHX Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "AHX", cpu, memory, ppu);
+            uint8_t value = cpu->A & cpu->X & ((effective_addr >> 8) + 1);
+            memory_write(effective_addr, value, memory, ppu);
+            cpu->cycles = 5;
+            break;
+        }
+
+        // ======== SHX ======== 
+        
+        case 0x9E: { // SHX Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "SHX", cpu, memory, ppu);
+            uint8_t value = cpu->X & ((effective_addr >> 8) + 1);
+            memory_write(effective_addr, value, memory, ppu);
+            cpu->cycles = 5;
+            break;
+        }
+
+        // ======== TAS ======== 
+        
+        case 0x9B: { // TAS Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "TAS", cpu, memory, ppu);
+            cpu->S = cpu->A & cpu->X;
+            uint8_t value = cpu->S & ((effective_addr >> 8) + 1);
+            memory_write(effective_addr, value, memory, ppu);
+            cpu->cycles = 5;
+            break;
+        }
+
+        // ======== LAS ======== 
+
+        case 0xBB: { // LAS Absolute, Y
+            uint16_t effective_addr = cpu_absolute_y(opcode, "LAS", cpu, memory, ppu);
+            uint8_t value = memory_read(effective_addr, memory, ppu) & cpu->S;
+            cpu->A = cpu->X = cpu->S = value;
+            update_zero_and_negative_flags(cpu, value);
+            cpu->cycles = 4;
+            break;
+        }        
+
+        // ======== NOP ======== 
+
+        case 0x1A:
+        case 0x3A: 
+        case 0x5A:
+        case 0x7A:
+        case 0xDA:
+        case 0xFA: { // NOP Implied
+            DEBUG_MSG_CPU("Executing instruction [NOP Implied]: %02X", opcode);
+            cpu->cycles = 2;
+            break;
+        }
+
+        case 0x80:
+        case 0x89:
+        case 0x82:
+        case 0xC2:
+        case 0xE2: { //  NOP #Immediate
+            uint8_t immediate = memory_read(cpu->PC++, memory, ppu);
+            DEBUG_MSG_CPU("Executing instruction [NOP #Immediate]: %02X %02X", opcode, immediate);
+            cpu->cycles = 2;
+            break;
+        }
+
+        case 0x04:
+        case 0x44:
+        case 0x64: { // NOP Zero Page
+            cpu_zero_page(opcode, "NOP", cpu, memory, ppu);
+            cpu->cycles = 3;
+            break;
+        }
+
+        case 0x0C: { // NOP Absolute 
+            cpu_absolute(opcode, "NOP", cpu, memory, ppu);
+            cpu->cycles = 4;
+            break;
+        }
+
+        case 0x14:
+        case 0x34:
+        case 0x54:
+        case 0x74:
+        case 0xD4:
+        case 0xF4: { // NOP Zero Page, X
+            cpu_zero_page_x(opcode, "NOP", cpu, memory, ppu);
+            cpu->cycles = 4;
+            break;
+        }
+
+        case 0x1C:
+        case 0x3C:
+        case 0x5C:
+        case 0x7C:
+        case 0xDC:
+        case 0xFC: { // NOP Absolute, X
+            cpu_absolute_x(opcode, "NOP", cpu, memory, ppu);
+            cpu->cycles = 4;   
+            if (cpu->page_crossed) {
+                cpu->cycles += 1;
+            }
+            break;
+        }
+
+        // ======== INV ======== 
+
+        case 0x02:
+        case 0x22:
+        case 0x42:
+        case 0x62:
+        case 0x12:
+        case 0x32:
+        case 0x52:
+        case 0x72:
+        case 0x92:
+        case 0xB2:
+        case 0xD2:
+        case 0xF2: {
+            cpu->PC++;
+            cpu->cycles = 0;
+            break;
+        }
+
         // ==================== Other ====================
 
         case 0xEA: { // NOP 
@@ -2485,6 +3747,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
             // Pop status flag from stack
             uint8_t status = stack_pop(cpu, memory, ppu);
+            status |= FLAG_UNUSED;
             cpu->P = status;
 
             // Pop address from top of the stack
@@ -2506,8 +3769,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             break;
         }
         
-        default: // Undocumented Opcodes
-            cpu->PC++; 
+        default: 
+            FATAL_ERROR("CPU", "Missing Opcode [%02X]", opcode);
             break;
     }
 }
@@ -2572,7 +3835,7 @@ void cpu_nmi(CPU *cpu, uint8_t *memory, PPU *ppu) { // Non-Maskable Interrupt
 
 uint16_t cpu_zero_page(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
     uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
-    DEBUG_MSG_CPU("Executing instruction [%s ZeroPage]: %02X", instruction, opcode);
+    DEBUG_MSG_CPU("Executing instruction [%s ZeroPage]: %02X %02X", instruction, opcode, zero_addr);
 
     uint16_t effective_addr = (uint16_t) zero_addr;
 
@@ -2581,7 +3844,7 @@ uint16_t cpu_zero_page(uint8_t opcode, const char *instruction, CPU *cpu, uint8_
 
 uint16_t cpu_zero_page_x(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
     uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
-    DEBUG_MSG_CPU("Executing instruction [%s ZeroPage, X]: %02X", instruction, opcode);
+    DEBUG_MSG_CPU("Executing instruction [%s ZeroPage, X]: %02X %02X", instruction, opcode, zero_addr);
 
     uint8_t wrapped_addr = (zero_addr + cpu->X) & 0xFF; // wraps around 0x00 - 0xFF
     uint16_t effective_addr = (uint16_t) wrapped_addr; 
@@ -2591,7 +3854,7 @@ uint16_t cpu_zero_page_x(uint8_t opcode, const char *instruction, CPU *cpu, uint
 
 uint16_t cpu_zero_page_y(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
     uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
-    DEBUG_MSG_CPU("Executing instruction [%s ZeroPage, Y]: %02X", instruction, opcode);
+    DEBUG_MSG_CPU("Executing instruction [%s ZeroPage, Y]: %02X %02X", instruction, opcode, zero_addr);
 
     uint8_t wrapped_addr = (zero_addr + cpu->Y) & 0xFF; // wraps around 0x00 - 0xFF
     uint16_t effective_addr = (uint16_t) wrapped_addr; 
