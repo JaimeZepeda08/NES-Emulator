@@ -99,15 +99,15 @@ int ppu_run_cycle(PPU *ppu) {
 }
 
 uint32_t calculate_pixel_color(PPU *ppu, int x, int y) {
-    // If background rendering is disabled globally, render transparent
-    if (!(ppu->PPUMASK & PPUMASK_b)) { // Bit 3: Show background
-        return 0x00000000; // Transparent
-    }
+    // // If background rendering is disabled globally, render transparent
+    // if (!(ppu->PPUMASK & PPUMASK_b)) { // Bit 3: Show background
+    //     return 0x00000000; // Transparent
+    // }
 
-    // If background rendering in left 8 pixels is disabled
-    if (x < 8 && !(ppu->PPUMASK & PPUMASK_m)) { // Bit 1: Show background left 8 px
-        return 0x00000000;
-    }
+    // // If background rendering in left 8 pixels is disabled
+    // if (x < 8 && !(ppu->PPUMASK & PPUMASK_m)) { // Bit 1: Show background left 8 px
+    //     return 0x00000000;
+    // }
 
     // Which tile is this pixel inside?
     int tile_x = x / 8;

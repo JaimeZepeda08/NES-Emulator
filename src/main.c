@@ -14,6 +14,7 @@
 #include "../include/display.h"
 
 #define MEMORY_OUTPUT_FILE "memory.txt"
+FILE *log_file = NULL;
 
 int cycle();
 void load_rom(char *filename, uint8_t *memory, PPU *ppu);
@@ -93,6 +94,12 @@ int main(int argc, char *argv[]) {
             printf("BREAKPOINT SET at address 0x%04X\n", breakpoint);
         }
         printf("\n");
+
+        log_file = fopen("roms/tests/nestest_output.log", "w");
+        if (!log_file) {
+            perror("Failed to open log file");
+            exit(1);
+        }
     }
 
     int running = 1;
@@ -151,6 +158,17 @@ int main(int argc, char *argv[]) {
 }
 
 int cycle() {
+    // log cpu to file if debug
+    if (debug_enable && log_file) {
+        fprintf(log_file, "%04X A:%02X X:%02X Y:%02X P:%02X S:%02X\n",
+                cpu->PC,
+                cpu->A,
+                cpu->X,
+                cpu->Y,
+                cpu->P,
+                cpu->S);
+    }
+
     // Fetch-Decode-Execute next instruction
     uint8_t opcode = memory_read(cpu->PC++, memory, ppu);
 
@@ -283,6 +301,9 @@ void clean_up() {
     cpu_free(cpu);
     memory_free(memory);
     cntrl_free(controller);
+    if (log_file) {
+        fclose(log_file);
+    }
     printf("DONE\n");
 }
 

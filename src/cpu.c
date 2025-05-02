@@ -34,7 +34,7 @@ CPU *cpu_init(uint8_t *memory) {
     cpu->A = 0;
     cpu->X = 0;
     cpu->Y = 0;
-    cpu->PC = 0xC000; // memory[0xFFFC] | (memory[0xFFFD] << 8); // reset vector at 0xFFFC and 0xFFFD (little endian) // 0xC000
+    cpu->PC = memory[0xFFFC] | (memory[0xFFFD] << 8); // reset vector at 0xFFFC and 0xFFFD (little endian) // 0xC000
     cpu->S = 0xFD; 
     cpu->P = 0x24;
 
@@ -927,6 +927,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             value--;
             memory_write(effective_addr, value, memory, ppu);
 
+            update_zero_and_negative_flags(cpu, value);
+
             // Set cycles
             cpu->cycles = 5;
             break;
@@ -939,6 +941,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             // decrement value and write back to memory
             value--;
             memory_write(effective_addr, value, memory, ppu);
+
+            update_zero_and_negative_flags(cpu, value);
 
             // Set cycles
             cpu->cycles = 6;
@@ -953,6 +957,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             value--;
             memory_write(effective_addr, value, memory, ppu);
 
+            update_zero_and_negative_flags(cpu, value);
+
             // Set cycles
             cpu->cycles = 6;
             break;
@@ -965,6 +971,8 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             // decrement value and write back to memory
             value--;
             memory_write(effective_addr, value, memory, ppu);
+
+            update_zero_and_negative_flags(cpu, value);
 
             // Set cycles
             cpu->cycles = 7;
@@ -2444,7 +2452,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             // OR result with A and store back in A
             cpu->A |= value;
 
-            update_zero_and_negative_flags(cpu, value);
+            update_zero_and_negative_flags(cpu, cpu->A);
 
             // set cycles
             cpu->cycles = 5;
@@ -2466,7 +2474,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             // OR result with A and store back in A
             cpu->A |= value;
 
-            update_zero_and_negative_flags(cpu, value);
+            update_zero_and_negative_flags(cpu, cpu->A);
 
             // set cycles
             cpu->cycles = 6;
@@ -2488,7 +2496,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             // OR result with A and store back in A
             cpu->A |= value;
 
-            update_zero_and_negative_flags(cpu, value);
+            update_zero_and_negative_flags(cpu, cpu->A);
 
             // set cycles
             cpu->cycles = 6;
@@ -2510,7 +2518,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             // OR result with A and store back in A
             cpu->A |= value;
 
-            update_zero_and_negative_flags(cpu, value);
+            update_zero_and_negative_flags(cpu, cpu->A);
 
             // set cycles
             cpu->cycles = 7;
@@ -2532,7 +2540,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             // OR result with A and store back in A
             cpu->A |= value;
 
-            update_zero_and_negative_flags(cpu, value);
+            update_zero_and_negative_flags(cpu, cpu->A);
 
             // set cycles
             cpu->cycles = 7;
@@ -2554,7 +2562,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             // OR result with A and store back in A
             cpu->A |= value;
 
-            update_zero_and_negative_flags(cpu, value);
+            update_zero_and_negative_flags(cpu, cpu->A);
 
             // set cycles
             cpu->cycles = 8;
@@ -2576,7 +2584,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
             // OR result with A and store back in A
             cpu->A |= value;
 
-            update_zero_and_negative_flags(cpu, value);
+            update_zero_and_negative_flags(cpu, cpu->A);
 
             // set cycles
             cpu->cycles = 8;
