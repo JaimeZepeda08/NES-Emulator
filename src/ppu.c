@@ -64,13 +64,12 @@ int ppu_run_cycle(PPU *ppu) {
     }
 
     // Non-visible scanlines --> game can modify screen
-    if (ppu->scanline == 241) {
-        if ((ppu->PPUCTRL & PPUCNTRL_V) && ppu->nmi == 0) {
+    if (ppu->scanline == 241 && ppu->cycle == 1) {
+        ppu->PPUSTATUS |= PPUSTATUS_V; // Set VBlank flag
+        if ((ppu->PPUCTRL & PPUCNTRL_V) && ppu->nmi == 0) { // detects on rising edge of nmi
             // signal cpu's NMI handler
             ppu->nmi = 1;
         }
-
-        ppu->PPUSTATUS |= PPUSTATUS_V; // Set VBlank flag
     }
 
     if (ppu->scanline >= 0 && ppu->scanline < NES_HEIGHT) {
@@ -99,15 +98,15 @@ int ppu_run_cycle(PPU *ppu) {
 }
 
 uint32_t calculate_pixel_color(PPU *ppu, int x, int y) {
-    // // If background rendering is disabled globally, render transparent
-    // if (!(ppu->PPUMASK & PPUMASK_b)) { // Bit 3: Show background
-    //     return 0x00000000; // Transparent
-    // }
+    // If background rendering is disabled globally, render transparent
+    if (!(ppu->PPUMASK & PPUMASK_b)) { // Bit 3: Show background
+        return 0x00000000; // Transparent
+    }
 
-    // // If background rendering in left 8 pixels is disabled
-    // if (x < 8 && !(ppu->PPUMASK & PPUMASK_m)) { // Bit 1: Show background left 8 px
-    //     return 0x00000000;
-    // }
+    // If background rendering in left 8 pixels is disabled
+    if (x < 8 && !(ppu->PPUMASK & PPUMASK_m)) { // Bit 1: Show background left 8 px
+        return 0x00000000;
+    }
 
     // Which tile is this pixel inside?
     int tile_x = x / 8;
@@ -147,7 +146,7 @@ uint32_t calculate_pixel_color(PPU *ppu, int x, int y) {
     }
 
     // Read the color from the palette memory (0x3F00-0x3F1F)
-    uint16_t palette_address = 0x3F00 + color_id;
+    uint16_t palette_address = PALETTE_BASE + color_id;
 
     // Wrap around if needed
     palette_address &= 0x3F1F;
@@ -186,7 +185,7 @@ uint8_t ppu_read(PPU *ppu, uint16_t reg) {
 
         case PPUSTATUS_REG: {
             uint8_t status = ppu->PPUSTATUS;
-            ppu->PPUSTATUS &= ~PPUCNTRL_V; // clear VBlank
+            ppu->PPUSTATUS &= ~PPUSTATUS_V; // clear VBlank
             ppu->w = 0; // clear w register
             return status;
         }
@@ -204,15 +203,27 @@ uint8_t ppu_read(PPU *ppu, uint16_t reg) {
             return ppu->PPUADDR;
 
         case PPUDATA_REG: {
-             // buffer data reads for one extra cycle
-            ppu->PPUDATA = ppu->data_buffer;
-            ppu->data_buffer = ppu->vram[ppu->v & 0x3FFF];
-
             // palette data can be read without buffering
-            if (ppu->v > 0x3F00) {
-                uint16_t mirrored_addr = ppu->v & 0x3F1F;; 
+            if (ppu->v >= PALETTE_BASE) {
+                uint16_t mirrored_addr = PALETTE_BASE | (ppu->v & 0x1F);
+                if ((mirrored_addr & 0x13) == 0x10) mirrored_addr &= ~0x10;
                 ppu->PPUDATA = ppu->vram[mirrored_addr];
+
+                // perform buffered read for next read
+                uint16_t buffered_addr = ppu->v & 0x2FFF;
+                ppu->data_buffer = ppu->vram[buffered_addr];
+            } else { // Normal VRAM read
+                // buffer data reads for one extra cycle
+                ppu->PPUDATA = ppu->data_buffer;
+                ppu->data_buffer = ppu->vram[ppu->v & 0x3FFF];
             }
+
+            // Increase address after read
+            if (ppu->PPUCTRL & PPUCNTRL_I) {
+                ppu->v += 32;
+            } else {
+                ppu->v += 1;
+            } 
 
             return ppu->PPUDATA;
         }
@@ -264,7 +275,18 @@ void ppu_write(PPU *ppu, uint16_t reg, uint8_t value) {
 
         case PPUDATA_REG: {
             ppu->PPUDATA = value;
-            ppu->vram[ppu->v & 0x3FFF] = value;
+
+            // Mirror writes to pallete
+            if (ppu->v >= PALETTE_BASE) {
+                uint16_t palette_offset = ppu->v & 0x1F;
+                if ((palette_offset & 0x13) == 0x10) palette_offset &= ~0x10;
+                uint16_t palette_addr = PALETTE_BASE | palette_offset;
+                ppu->vram[palette_addr] = value;
+            } else { // Write to VRAM
+                ppu->vram[ppu->v & 0x3FFF] = value;
+            }
+
+            // Increase address after write
             if (ppu->PPUCTRL & PPUCNTRL_I) {
                 ppu->v += 32;
             } else {

@@ -55,7 +55,9 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
     cpu->page_crossed = 0;
 
     if (ppu->nmi == 1 && cpu->service_int == 0) { // Handle NMI interrupt
-        // cpu_nmi(cpu, memory, ppu);
+        cpu->PC--; // decrement because we incremented when calling the function
+        cpu_nmi(cpu, memory, ppu);
+        return;
     }
 
     switch (opcode) {
@@ -3823,9 +3825,9 @@ void cpu_nmi(CPU *cpu, uint8_t *memory, PPU *ppu) { // Non-Maskable Interrupt
     stack_push((return_addr >> 8) & 0xFF, cpu, memory, ppu); // high byte
     stack_push(return_addr & 0xFF, cpu, memory, ppu);        // low byte
 
-    // Push status register with Break flag set
-    uint8_t status_with_B = cpu->P | FLAG_BREAK | FLAG_UNUSED; 
-    stack_push(status_with_B, cpu, memory, ppu);
+    uint8_t status = cpu->P & ~FLAG_BREAK;
+    status |= FLAG_UNUSED; 
+    stack_push(status, cpu, memory, ppu);
 
     // Set Interrupt Disable flag
     cpu->P |= FLAG_INT; 
