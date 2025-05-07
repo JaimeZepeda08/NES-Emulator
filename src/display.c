@@ -4,6 +4,7 @@
 #include "../include/log.h"
 #include "../include/ppu.h"
 #include "../include/cpu.h"
+#include "../include/input.h"
 
 SDL_Window *window_init() {
     printf("Initializing NES Display...");

@@ -98,69 +98,120 @@ int ppu_run_cycle(PPU *ppu) {
 }
 
 uint32_t calculate_pixel_color(PPU *ppu, int x, int y) {
-    // If background rendering is disabled globally, render transparent
-    if (!(ppu->PPUMASK & PPUMASK_b)) { // Bit 3: Show background
-        return 0x00000000; // Transparent
+    uint32_t bg_color = 0x00000000;
+
+    // 1. Background Rendering
+    if ((ppu->PPUMASK & PPUMASK_b) && (x >= 8 || (ppu->PPUMASK & PPUMASK_m))) {
+        // Calculate tile indices and fine scroll within the tile
+        int tile_x = x / 8;
+        int tile_y = y / 8;
+        int fine_x = x % 8;
+        int fine_y = y % 8;
+
+        // Determine the base nametable address from PPUCTRL
+        uint16_t base_nametable = 0x2000;
+        switch (((ppu->PPUCTRL & PPUCNTRL_N_HIGH) << 1) | (ppu->PPUCTRL & PPUCNTRL_N_LOW)) {
+            case 0b00: base_nametable = 0x2000; break;
+            case 0b01: base_nametable = 0x2400; break;
+            case 0b10: base_nametable = 0x2800; break;
+            case 0b11: base_nametable = 0x2C00; break;
+        }
+
+        uint16_t nametable_address = mirror_nametable(ppu, base_nametable) + tile_y * 32 + tile_x;
+        uint8_t tile_index = ppu->vram[nametable_address & 0x3FFF];
+
+        // Find tile graphics in pattern table
+        uint16_t pattern_table_addr = (ppu->PPUCTRL & PPUCNTRL_B) ? 0x1000 : 0x0000;
+        uint16_t tile_address = pattern_table_addr + tile_index * 16;
+
+        uint8_t bitplane0 = ppu->vram[(tile_address + fine_y) & 0x1FFF];
+        uint8_t bitplane1 = ppu->vram[(tile_address + fine_y + 8) & 0x1FFF];
+
+        int bit = 7 - fine_x;
+        uint8_t pixel_low  = (bitplane0 >> bit) & 1;
+        uint8_t pixel_high = (bitplane1 >> bit) & 1;
+        uint8_t color_id = (pixel_high << 1) | pixel_low;
+
+        if (color_id != 0) {
+            uint16_t attr_address = mirror_nametable(ppu, base_nametable + 0x3C0 + (tile_y / 4) * 8 + (tile_x / 4));
+            uint8_t attr_byte = ppu->vram[attr_address & 0x3FFF];
+
+            int shift = ((tile_y % 4) / 2) * 4 + ((tile_x % 4) / 2) * 2;
+            uint8_t palette_bits = (attr_byte >> shift) & 0x03;
+
+            uint8_t palette_index = (palette_bits << 2) | color_id;
+            uint16_t palette_address = PALETTE_BASE + (palette_index & 0x1F);
+            SDL_Color color = nes_palette[ppu->vram[palette_address] & 0x3F];
+
+            if (ppu->PPUMASK & PPUMASK_Gr) {
+                uint8_t gray = (color.r + color.g + color.b) / 3;
+                color.r = color.g = color.b = gray;
+            }
+
+            bg_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
+        }
     }
 
-    // If background rendering in left 8 pixels is disabled
-    if (x < 8 && !(ppu->PPUMASK & PPUMASK_m)) { // Bit 1: Show background left 8 px
-        return 0x00000000;
+    // 2. Sprite Rendering
+    uint32_t sprite_color = 0x00000000;
+    int sprite_drawn = 0;
+
+    if (ppu->PPUMASK & PPUMASK_s) {
+        for (int i = 0; i < 64; i++) {
+            int base = i * 4;
+            uint8_t sprite_y = ppu->oam[base];
+            uint8_t tile_index = ppu->oam[base + 1];
+            uint8_t attr = ppu->oam[base + 2];
+            uint8_t sprite_x = ppu->oam[base + 3];
+
+            int sprite_height = (ppu->PPUCTRL & 0x20) ? 16 : 8;
+
+            if (x < sprite_x || x >= sprite_x + 8 || y < sprite_y || y >= sprite_y + sprite_height) {
+                continue;
+            }
+
+            int sx = x - sprite_x;
+            int sy = y - sprite_y;
+            if (attr & 0x40) sx = 7 - sx;
+            if (attr & 0x80) sy = sprite_height - 1 - sy;
+
+            uint16_t pattern_table = (ppu->PPUCTRL & PPUCNTRL_S) ? 0x1000 : 0x0000;
+            uint16_t tile_addr = pattern_table + tile_index * 16;
+            if (sprite_height == 16) {
+                tile_addr = (tile_index & 0xFE) * 16 + ((tile_index & 1) ? 0x1000 : 0x0000);
+            }
+
+            uint8_t plane0 = ppu->vram[(tile_addr + sy) & 0x1FFF];
+            uint8_t plane1 = ppu->vram[(tile_addr + sy + 8) & 0x1FFF];
+
+            int bit = 7 - sx;
+            uint8_t p0 = (plane0 >> bit) & 1;
+            uint8_t p1 = (plane1 >> bit) & 1;
+            uint8_t color_id = (p1 << 1) | p0;
+
+            if (color_id == 0) continue;
+
+            uint8_t palette_index = 0x10 + ((attr & 0x03) << 2) + color_id;
+            uint16_t palette_addr = PALETTE_BASE + (palette_index & 0x1F);
+            SDL_Color color = nes_palette[ppu->vram[palette_addr] & 0x3F];
+
+            if (ppu->PPUMASK & PPUMASK_Gr) {
+                uint8_t gray = (color.r + color.g + color.b) / 3;
+                color.r = color.g = color.b = gray;
+            }
+
+            sprite_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
+
+            // If sprite is in front of background OR background is transparent, draw sprite
+            if ((attr & 0x20) == 0 || bg_color == 0x00000000) {
+                sprite_drawn = 1;
+                break;
+            }
+        }
     }
 
-    // Which tile is this pixel inside?
-    int tile_x = x / 8;
-    int tile_y = y / 8;
-    int fine_x = x % 8;
-    int fine_y = y % 8;
-
-    // Get base nametable from settings in CNTRL register
-    uint16_t base_nametable = 0x2000;
-    switch (((ppu->PPUCTRL & PPUCNTRL_N_HIGH) << 1) | (ppu->PPUCTRL & PPUCNTRL_N_LOW)) {
-        case 0b00: base_nametable = 0x2000; break;
-        case 0b01: base_nametable = 0x2400; break;
-        case 0b10: base_nametable = 0x2800; break;
-        case 0b11: base_nametable = 0x2C00; break;
-    }
-
-    uint16_t nametable_address = mirror_nametable(ppu, base_nametable) + tile_y * 32 + tile_x;
-    uint8_t tile_index = ppu->vram[nametable_address & 0x3FFF];
-
-    // Find tile graphics in pattern table
-    uint16_t pattern_table_addr = (ppu->PPUCTRL & PPUCNTRL_B) ? 0x1000 : 0x0000;
-    uint16_t tile_address = pattern_table_addr + tile_index * 16;
-
-    // Read bitplanes for this row (fine_y)
-    uint8_t bitplane0 = ppu->vram[(tile_address + fine_y) & 0x1FFF];
-    uint8_t bitplane1 = ppu->vram[(tile_address + fine_y + 8) & 0x1FFF];
-
-    // Find color bits for this pixel
-    int bit = 7 - fine_x;
-    uint8_t pixel_low  = (bitplane0 >> bit) & 1;
-    uint8_t pixel_high = (bitplane1 >> bit) & 1;
-    uint8_t color_id = (pixel_high << 1) | pixel_low;
-
-    // If color ID is 0, it's transparent (background color)
-    if (color_id == 0) {
-        return 0x00000000; // Transparent pixel
-    }
-
-    // Read the color from the palette memory (0x3F00-0x3F1F)
-    uint16_t palette_address = PALETTE_BASE + color_id;
-
-    // Wrap around if needed
-    palette_address &= 0x3F1F;
-
-    SDL_Color color = nes_palette[ppu->vram[palette_address] & 0x3F];
-
-    // If grayscale bit (bit 0 of PPUMASK) is set, desaturate the color
-    if (ppu->PPUMASK & PPUMASK_Gr) {
-        uint8_t gray = (color.r + color.g + color.b) / 3;
-        color.r = color.g = color.b = gray;
-    }
-
-    uint32_t pixel_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
-    return pixel_color;
+    // 3. Final pixel
+    return sprite_drawn ? sprite_color : bg_color;
 }
 
 uint16_t mirror_nametable(PPU *ppu, uint16_t address) {

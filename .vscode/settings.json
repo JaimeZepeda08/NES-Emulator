@@ -23,6 +23,8 @@
         "sdl_ttf.h": "c",
         "unistd.h": "c",
         "ios": "c",
-        "locale": "c"
+        "locale": "c",
+        "sdl.h": "c",
+        "profiler.h": "c"
     }
 }

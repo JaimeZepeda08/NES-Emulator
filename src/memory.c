@@ -2,6 +2,7 @@
 #include "../include/log.h"
 #include "../include/ppu.h"
 #include "../include/cpu.h"
+#include "../include/input.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +34,8 @@ uint8_t memory_read(uint16_t address, uint8_t *memory, PPU *ppu) {
 
     // Controller Shift Registers
     if (address == 0x4016 || address == 0x4017) {
-       
+        uint8_t value = cntrl_read(controller);
+        return value;
     }
 
     if (address <= 0x1FFF) { // Mirror internal RAM
@@ -65,7 +67,7 @@ void memory_write(uint16_t address, uint8_t value, uint8_t *memory, PPU *ppu) {
 
     // Controller Shift Registers
     if (address == 0x4016 || address == 0x4017) {
-        
+        cntrl_write(controller, value);
     }
 
     if (address <= 0x1FFF) { // Mirror internal RAM

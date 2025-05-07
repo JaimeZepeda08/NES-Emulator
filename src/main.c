@@ -183,7 +183,7 @@ int cycle() {
             // calculate FPS
             time_t curr_time;
             time(&curr_time);
-            ppu->FPS = ppu->frames / (curr_time - init_time);
+            ppu->FPS = ppu->frames / difftime(curr_time, init_time);
 
             // render display
             render_display(renderer, ppu, cpu, game_texture, font);

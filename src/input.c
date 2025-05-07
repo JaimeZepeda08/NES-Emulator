@@ -71,13 +71,13 @@ void cntrl_handle_input(CNTRL *cntrl, SDL_Event *event) {
 void cntrl_write(CNTRL *cntrl, uint8_t value) {
     cntrl->strobe = value & 1;
     if (cntrl->strobe) {
-        // Latch: Copy button state to shift register
+        // Copy button state to shift register
         cntrl->shift_reg = cntrl->button_state;
     }
 }
 
 uint8_t cntrl_read(CNTRL *cntrl) {
-    uint8_t bit = cntrl->shift_reg & 1; // Get LSB
-    cntrl->shift_reg >>= 1; // Shift right
-    return bit | 0x40; // Bit 6 is always 1 (as per NES hardware)
+    uint8_t bit = cntrl->shift_reg & 1; 
+    cntrl->shift_reg >>= 1; 
+    return bit;
 }
