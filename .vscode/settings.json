@@ -25,6 +25,9 @@
         "ios": "c",
         "locale": "c",
         "sdl.h": "c",
-        "profiler.h": "c"
+        "profiler.h": "c",
+        "stdint.h": "c",
+        "opcode_handlers.h": "c",
+        "signal.h": "c"
     }
 }

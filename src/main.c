@@ -33,7 +33,7 @@ SDL_Renderer *renderer;
 SDL_Texture *game_texture;
 TTF_Font *font;
 
-time_t init_time;
+clock_t last_time;
 
 int debug_enable = 0;
 uint16_t breakpoint = 0xFFFF;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     printf("Booting up NES Emulator...\n");
 
     // get initial time
-    time(&init_time);
+    last_time = clock();
 
     // Register signal handler for SIGINT
     signal(SIGINT, handle_sigint);
@@ -181,9 +181,13 @@ int cycle() {
         int frame_complete = ppu_run_cycle(ppu);
         if (frame_complete) {
             // calculate FPS
-            time_t curr_time;
-            time(&curr_time);
-            ppu->FPS = ppu->frames / difftime(curr_time, init_time);
+            clock_t curr_time = clock();
+            if (ppu->frames > 30) {
+                double elapsed = (double)(curr_time - last_time) / CLOCKS_PER_SEC;
+                ppu->FPS = ppu->frames / elapsed;
+                ppu->frames = 0;
+                last_time = clock();
+            }
 
             // render display
             render_display(renderer, ppu, cpu, game_texture, font);
