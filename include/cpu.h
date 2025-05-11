@@ -3,7 +3,9 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "ppu.h"
+
+typedef struct MEM MEM;
+typedef struct PPU PPU;
 
 // CPU status register (P) flags
 #define FLAG_CARRY          0x01 // Bit 1 (C)
@@ -27,11 +29,11 @@ typedef struct CPU {
     int service_int;    // if 1, then an interrupt is being serviced
 } CPU;
 
-CPU *cpu_init(uint8_t *memory);
+CPU *cpu_init(MEM *memory);
 void cpu_free(CPU *cpu);
-void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu);
-void cpu_irq(CPU *cpu, uint8_t *memory, PPU *ppu);
-void cpu_nmi(CPU *cpu, uint8_t *memory, PPU *ppu);
+void cpu_execute_opcode(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu);
+void cpu_irq(CPU *cpu, MEM *memory, PPU *ppu);
+void cpu_nmi(CPU *cpu, MEM *memory, PPU *ppu);
 void cpu_dump_registers(CPU *cpu);
 
 #endif

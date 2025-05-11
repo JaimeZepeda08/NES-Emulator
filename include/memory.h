@@ -3,11 +3,17 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "cpu.h"
-#include "ppu.h"
+
+typedef struct CPU CPU;
+typedef struct PPU PPU;
+
+#define CACHE_LINE_SIZE 64
 
 // NES has 16 bit address bus -> 2^16 = 64KB address space
-#define MEMORY_SIZE 0x10000 // 64KB
+#define MEMORY_SIZE     0x10000 // 64KB
+#define RAM_SIZE        0x0800  // 2KB internal RAM
+#define PROG_ROM        0x8000  // 32KB ROM
+
 // NES STACK starts at 0x01FF and grows down to 0x0100
 #define STACK_BASE 0x0100
 
@@ -28,12 +34,17 @@
 // 0x8000-0xFFFF    |   Cartridge ROM              //
 /////////////////////////////////////////////////////
 
-u_int8_t *memory_init();
-void memory_free(uint8_t *memory);
-uint8_t memory_read(uint16_t address, uint8_t *memory, PPU *ppu);
-void memory_write(uint16_t address, uint8_t value, uint8_t *memory, PPU *ppu);
-void stack_push(uint8_t value, CPU *cpu, uint8_t *memory, PPU *ppu);
-uint8_t stack_pop(CPU *cpu, uint8_t *memory, PPU *ppu);
-void memory_dump(FILE *output, uint8_t *memory);
+typedef struct __attribute__((aligned(CACHE_LINE_SIZE))) MEM {
+    uint8_t ram[RAM_SIZE];       // 2KB internal RAM
+    uint8_t prg_rom[PROG_ROM];   // 32KB PRG ROM (NROM)
+} MEM;
+
+MEM *memory_init();
+void memory_free(MEM *memory);
+uint8_t memory_read(uint16_t address, MEM *memory, PPU *ppu);
+void memory_write(uint16_t address, uint8_t value, MEM *memory, PPU *ppu);
+void stack_push(uint8_t value, CPU *cpu, MEM *memory, PPU *ppu);
+uint8_t stack_pop(CPU *cpu, MEM *memory, PPU *ppu);
+void memory_dump(FILE *output, MEM *memory);
 
 #endif

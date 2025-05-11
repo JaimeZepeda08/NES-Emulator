@@ -7,61 +7,61 @@
 #include "../include/opcode_handlers.h"
 
 // Addressing Modes
-uint16_t cpu_immediate(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu);
-uint16_t cpu_zero_page(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu);
-uint16_t cpu_zero_page_x(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu);
-uint16_t cpu_zero_page_y(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu);
-uint16_t cpu_absolute(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu);
-uint16_t cpu_absolute_x(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu);
-uint16_t cpu_absolute_y(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu);
-uint16_t cpu_indirect_x(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu);
-uint16_t cpu_indirect_y(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu);
+uint16_t cpu_immediate(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu);
+uint16_t cpu_zero_page(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu);
+uint16_t cpu_zero_page_x(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu);
+uint16_t cpu_zero_page_y(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu);
+uint16_t cpu_absolute(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu);
+uint16_t cpu_absolute_x(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu);
+uint16_t cpu_absolute_y(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu);
+uint16_t cpu_indirect_x(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu);
+uint16_t cpu_indirect_y(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu);
 
 // Access
-void lda(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void sta(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void ldx(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void stx(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void ldy(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void sty(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
+void lda(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void sta(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void ldx(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void stx(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void ldy(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void sty(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
 // Arithmetic
-void adc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void sbc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void inc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void dec(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
+void adc(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void sbc(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void inc(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void dec(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
 // Shift
-void lsr(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void asl(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void rol(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void ror(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
+void lsr(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void asl(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void rol(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void ror(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
 // Bitwise
-void and(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void ora(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void eor(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void bit(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
+void and(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void ora(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void eor(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void bit(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
 // Compare
-void cmp(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void cpx(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void cpy(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
+void cmp(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void cpx(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void cpy(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
 // Branch
 void branch(int condition, int8_t offset, CPU *cpu);
 // Unofficial
-void slo(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void lax(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void sax(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void dcp(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void isc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void rla(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void sre(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
-void rra(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu);
+void slo(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void lax(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void sax(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void dcp(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void isc(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void rla(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void sre(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
+void rra(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu);
 // Other
-void nop_implied(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu);
-void nop_immediate(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu);
-void nop_zero_page(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu);
-void nop_zero_page_x(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu);
-void nop_absolute(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu);
-void nop_absolute_x(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu);
-void invalid(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu);
+void nop_implied(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu);
+void nop_immediate(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu);
+void nop_zero_page(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu);
+void nop_zero_page_x(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu);
+void nop_absolute(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu);
+void nop_absolute_x(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu);
+void invalid(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu);
 
 // Helper Functions
 void init_opcode_table();
@@ -69,7 +69,7 @@ void update_zero_and_negative_flags(CPU* cpu, uint8_t value);
 
 InstructionHandler opcode_table[256];
 
-CPU *cpu_init(uint8_t *memory) {
+CPU *cpu_init(MEM *memory) {
     printf("Initializing CPU...");
 
     CPU *cpu = (CPU *)malloc(sizeof(CPU));
@@ -78,8 +78,8 @@ CPU *cpu_init(uint8_t *memory) {
         FATAL_ERROR("CPU", "CPU memory allocation failed");
     }
 
-    // Make sure that reset vector is set
-    if (memory[0xFFFC] == 0 && memory[0xFFFD] == 0) {
+    // Make sure that reset vector is set 0xFFFC & 0xFFFD
+    if (memory->prg_rom[0x7FFC] == 0 && memory->prg_rom[0x7FFD] == 0) { 
         printf("\tFAILED\n");
         FATAL_ERROR("CPU", "Reset vector at 0xFFFC and 0xFFFD not set");
     }
@@ -88,7 +88,7 @@ CPU *cpu_init(uint8_t *memory) {
     cpu->A = 0;
     cpu->X = 0;
     cpu->Y = 0;
-    cpu->PC = memory[0xFFFC] | (memory[0xFFFD] << 8); // reset vector at 0xFFFC and 0xFFFD (little endian) // 0xC000
+    cpu->PC = memory->prg_rom[0x7FFC] | (memory->prg_rom[0x7FFD] << 8); // reset vector at 0xFFFC and 0xFFFD (little endian)
     cpu->S = 0xFD; 
     cpu->P = 0x24;
 
@@ -106,7 +106,7 @@ void cpu_free(CPU *cpu) {
     free(cpu);
 }
 
-void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void cpu_execute_opcode(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     cpu->cycles = 0;
     cpu->page_crossed = 0;
 
@@ -124,7 +124,7 @@ void cpu_execute_opcode(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== LDA ========
 
 // LDA #Immediate
-void handle_0xA9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA9(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "LDA", cpu, memory, ppu);
     lda(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -132,7 +132,7 @@ void handle_0xA9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDA Zero Page
-void handle_0xA5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA5(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "LDA", cpu, memory, ppu);
     lda(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -140,7 +140,7 @@ void handle_0xA5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDA Zero Page, X
-void handle_0xB5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xB5(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "LDA", cpu, memory, ppu);
     lda(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -148,7 +148,7 @@ void handle_0xB5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDA Absolute
-void handle_0xAD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xAD(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "LDA", cpu, memory, ppu);
     lda(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -156,7 +156,7 @@ void handle_0xAD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDA Absolute, X
-void handle_0xBD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xBD(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "LDA", cpu, memory, ppu);
     lda(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -167,7 +167,7 @@ void handle_0xBD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
  
 // LDA Absolute, Y
-void handle_0xB9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xB9(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "LDA", cpu, memory, ppu);
     lda(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -178,7 +178,7 @@ void handle_0xB9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
        
 // LDA (Indirect, X)
-void handle_0xA1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA1(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "LDA", cpu, memory, ppu);
     lda(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -186,7 +186,7 @@ void handle_0xA1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
        
 // LDA (Indirect), Y
-void handle_0xB1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xB1(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "LDA", cpu, memory, ppu);
     lda(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -199,7 +199,7 @@ void handle_0xB1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== STA ======== 
 
 // STA Zero Page
-void handle_0x85(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x85(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "STA", cpu, memory, ppu);
     sta(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -207,7 +207,7 @@ void handle_0x85(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // STA Zero Page, X
-void handle_0x95(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x95(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "STA", cpu, memory, ppu);
     sta(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -215,7 +215,7 @@ void handle_0x95(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // STA Absolute
-void handle_0x8D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x8D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "STA", cpu, memory, ppu);
     sta(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -223,7 +223,7 @@ void handle_0x8D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
         
 // STA Absolute, X
-void handle_0x9D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x9D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "STA", cpu, memory, ppu);
     sta(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -231,7 +231,7 @@ void handle_0x9D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // STA Absolute, Y
-void handle_0x99(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x99(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "STA", cpu, memory, ppu);
     sta(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -239,7 +239,7 @@ void handle_0x99(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
        
 // STA (Indirect, X)
-void handle_0x81(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x81(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "STA", cpu, memory, ppu);
     sta(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -247,7 +247,7 @@ void handle_0x81(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
      
 // STA (Indirect), Y
-void handle_0x91(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x91(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "STA", cpu, memory, ppu);
     sta(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -257,7 +257,7 @@ void handle_0x91(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== LDX ======== 
 
 // LDX #Immediate
-void handle_0xA2(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA2(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "LDX", cpu, memory, ppu);
     ldx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -265,7 +265,7 @@ void handle_0xA2(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDX Zero Page
-void handle_0xA6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA6(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "LDX", cpu, memory, ppu);
     ldx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -273,7 +273,7 @@ void handle_0xA6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDX Zero Page, Y
-void handle_0xB6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xB6(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_y(opcode, "LDX", cpu, memory, ppu);
     ldx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -281,7 +281,7 @@ void handle_0xB6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDX Absolute
-void handle_0xAE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xAE(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "LDX", cpu, memory, ppu);
     ldx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -289,7 +289,7 @@ void handle_0xAE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDX Absolute, Y
-void handle_0xBE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xBE(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "LDX", cpu, memory, ppu);
     ldx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -302,7 +302,7 @@ void handle_0xBE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== STX ======== 
 
 // STX Zero Page
-void handle_0x86(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x86(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "STX", cpu, memory, ppu);
     stx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -310,7 +310,7 @@ void handle_0x86(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // STX Zero Page, Y
-void handle_0x96(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x96(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_y(opcode, "STX", cpu, memory, ppu);
     stx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -318,7 +318,7 @@ void handle_0x96(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // STX Absolute
-void handle_0x8E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x8E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "STX", cpu, memory, ppu);
     stx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -328,7 +328,7 @@ void handle_0x8E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== LDY ======== 
 
 // LDY #Immediate
-void handle_0xA0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA0(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "LDY", cpu, memory, ppu);
     ldy(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -336,7 +336,7 @@ void handle_0xA0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDY Zero Page
-void handle_0xA4(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA4(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "LDY", cpu, memory, ppu);
     ldy(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -344,7 +344,7 @@ void handle_0xA4(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LDY Zero Page, X
-void handle_0xB4(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xB4(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "LDY", cpu, memory, ppu);
     ldy(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -352,7 +352,7 @@ void handle_0xB4(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
         
 // LDY Absolute
-void handle_0xAC(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xAC(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "LDY", cpu, memory, ppu);
     ldy(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -360,7 +360,7 @@ void handle_0xAC(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
        
 // LDY Absolute, X
-void handle_0xBC(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xBC(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "LDY", cpu, memory, ppu);
     ldy(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -373,7 +373,7 @@ void handle_0xBC(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== STY ======== 
  
 // STY Zero Page
-void handle_0x84(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x84(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "STY", cpu, memory, ppu);
     sty(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -381,7 +381,7 @@ void handle_0x84(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // STY Zero Page, X
-void handle_0x94(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x94(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "STY", cpu, memory, ppu);
     sty(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -389,7 +389,7 @@ void handle_0x94(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // STY Absolute
-void handle_0x8C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x8C(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "STY", cpu, memory, ppu);
     sty(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -399,7 +399,7 @@ void handle_0x8C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ==================== Transfer ==================== 
 
 // TAX Implied
-void handle_0xAA(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xAA(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [TAX]: %02X", opcode);
     DEBUG_MSG_CPU("Writing 0x%02X to register X", cpu->A);
@@ -410,7 +410,7 @@ void handle_0xAA(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // TXA Implied
-void handle_0x8A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x8A(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [TXA]: %02X", opcode);
     DEBUG_MSG_CPU("Writing 0x%02X to register A", cpu->X);
@@ -421,7 +421,7 @@ void handle_0x8A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // TAY Implied
-void handle_0xA8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA8(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [TAY]: %02X", opcode);
     DEBUG_MSG_CPU("Writing 0x%02X to register Y", cpu->A);
@@ -432,7 +432,7 @@ void handle_0xA8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // TYA Implied
-void handle_0x98(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x98(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [TYA]: %02X", opcode);
     DEBUG_MSG_CPU("Writing 0x%02X to register A", cpu->Y);
@@ -447,7 +447,7 @@ void handle_0x98(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== ADC ======== 
 
 // ADC #Immediate
-void handle_0x69(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x69(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "ADC", cpu, memory, ppu);
     adc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -455,7 +455,7 @@ void handle_0x69(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ADC Zero Page
-void handle_0x65(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x65(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "ADC", cpu, memory, ppu);
     adc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -463,7 +463,7 @@ void handle_0x65(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ADC Zero Page, X
-void handle_0x75(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x75(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "ADC", cpu, memory, ppu);
     adc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -471,7 +471,7 @@ void handle_0x75(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ADC Absolute
-void handle_0x6D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x6D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "ADC", cpu, memory, ppu);
     adc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -479,7 +479,7 @@ void handle_0x6D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ADC Absolute, X
-void handle_0x7D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x7D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "ADC", cpu, memory, ppu);
     adc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -490,7 +490,7 @@ void handle_0x7D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ADC Absolute, Y
-void handle_0x79(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x79(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "ADC", cpu, memory, ppu);
     adc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -501,7 +501,7 @@ void handle_0x79(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ADC (Indirect, X)
-void handle_0x61(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x61(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "ADC", cpu, memory, ppu);
     adc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -509,7 +509,7 @@ void handle_0x61(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ADC (Indirect), Y
-void handle_0x71(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x71(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "ADC", cpu, memory, ppu);
     adc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -522,7 +522,7 @@ void handle_0x71(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== SBC ======== 
 
 // SBC #Immediate (Unofficial Opcode)
-void handle_0xEB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xEB(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "SBC", cpu, memory, ppu);
     sbc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -530,7 +530,7 @@ void handle_0xEB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SBC #Immediate
-void handle_0xE9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xE9(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "SBC", cpu, memory, ppu);
     sbc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -538,7 +538,7 @@ void handle_0xE9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SBC Zero Page
-void handle_0xE5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xE5(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "SBC", cpu, memory, ppu);
     sbc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -546,7 +546,7 @@ void handle_0xE5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SBC Zero Page, X
-void handle_0xF5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xF5(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "SBC", cpu, memory, ppu);
     sbc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -554,7 +554,7 @@ void handle_0xF5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SBC Absolute
-void handle_0xED(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xED(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "SBC", cpu, memory, ppu);
     sbc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -562,7 +562,7 @@ void handle_0xED(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SBC Absolute, X
-void handle_0xFD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xFD(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "SBC", cpu, memory, ppu);
     sbc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -573,7 +573,7 @@ void handle_0xFD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SBC Absolute, Y
-void handle_0xF9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xF9(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "SBC", cpu, memory, ppu);
     sbc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -584,7 +584,7 @@ void handle_0xF9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SBC (Indirect, X)
-void handle_0xE1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xE1(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "SBC", cpu, memory, ppu);
     sbc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -592,7 +592,7 @@ void handle_0xE1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SBC (Indirect), Y
-void handle_0xF1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xF1(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "SBC", cpu, memory, ppu);
     sbc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -605,7 +605,7 @@ void handle_0xF1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== INC ======== 
 
 // INC Zero Page
-void handle_0xE6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xE6(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "INC", cpu, memory, ppu);
     inc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -613,7 +613,7 @@ void handle_0xE6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // INC Zero Page, X
-void handle_0xF6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xF6(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "INC", cpu, memory, ppu);
     inc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -621,7 +621,7 @@ void handle_0xF6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // INC Absolute
-void handle_0xEE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xEE(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "INC", cpu, memory, ppu);
     inc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -629,7 +629,7 @@ void handle_0xEE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // INC Absolute, X
-void handle_0xFE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xFE(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "INC", cpu, memory, ppu);
     inc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -639,7 +639,7 @@ void handle_0xFE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== DEC ======== 
 
 // DEC Zero Page
-void handle_0xC6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xC6(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "DEC", cpu, memory, ppu);
     dec(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -647,7 +647,7 @@ void handle_0xC6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // DEC Zero Page, X
-void handle_0xD6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xD6(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "DEC", cpu, memory, ppu);
     dec(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -655,7 +655,7 @@ void handle_0xD6(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // DEC Absolute
-void handle_0xCE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xCE(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "DEC", cpu, memory, ppu);
     dec(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -663,7 +663,7 @@ void handle_0xCE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // DEC Absolute, X
-void handle_0xDE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xDE(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "DEC", cpu, memory, ppu);
     dec(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -673,7 +673,7 @@ void handle_0xDE(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== INX ======== 
 
 // INX (Increment X)
-void handle_0xE8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xE8(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [INX]: %02X", opcode);
     DEBUG_MSG_CPU("Incrementing register X by 0x01");
@@ -686,7 +686,7 @@ void handle_0xE8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== DEX ======== 
 
 // DEX (Decrement X)
-void handle_0xCA(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xCA(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [DEX]: %02X", opcode);
     DEBUG_MSG_CPU("Decrementing register X by 0x01");
@@ -699,7 +699,7 @@ void handle_0xCA(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== INY ======== 
 
 // INY (Increment Y)
-void handle_0xC8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xC8(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [INY]: %02X", opcode);
     DEBUG_MSG_CPU("Incrementing register Y by 0x01");
@@ -712,7 +712,7 @@ void handle_0xC8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== DEY ======== 
 
 // DEY (Decrement Y)
-void handle_0x88(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x88(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [DEY]: %02X", opcode);
     DEBUG_MSG_CPU("Decrementing register Y by 0x01");
@@ -727,7 +727,7 @@ void handle_0x88(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== LSR ======== 
 
 // LSR Accumulator
-void handle_0x4A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x4A(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [LSR Accumulator]: %02X", opcode);
 
@@ -747,7 +747,7 @@ void handle_0x4A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LSR Zero Page
-void handle_0x46(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x46(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "LSR", cpu, memory, ppu);
     lsr(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -755,7 +755,7 @@ void handle_0x46(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LSR Zero Page, X
-void handle_0x56(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x56(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "LSR", cpu, memory, ppu);
     lsr(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -763,7 +763,7 @@ void handle_0x56(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LSR Absolute
-void handle_0x4E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x4E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "LSR", cpu, memory, ppu);
     lsr(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -771,7 +771,7 @@ void handle_0x4E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LSR Absolute, X
-void handle_0x5E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x5E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "LSR", cpu, memory, ppu);
     lsr(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -781,7 +781,7 @@ void handle_0x5E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== ASL ======== 
 
 // ASL Accumulator
-void handle_0x0A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x0A(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [ASL Accumulator]: %02X", opcode);
 
@@ -800,7 +800,7 @@ void handle_0x0A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ASL Zero Page
-void handle_0x06(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x06(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "ASL", cpu, memory, ppu);
     asl(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -808,7 +808,7 @@ void handle_0x06(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ASL Zero Page, X
-void handle_0x16(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x16(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "ASL", cpu, memory, ppu);
     asl(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -816,7 +816,7 @@ void handle_0x16(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ASL Absolute
-void handle_0x0E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x0E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "ASL", cpu, memory, ppu);
     asl(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -824,7 +824,7 @@ void handle_0x0E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ASL Absolute, X
-void handle_0x1E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x1E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "ASL", cpu, memory, ppu);
     asl(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -834,7 +834,7 @@ void handle_0x1E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== ROR ========
 
 // ROR Accumulator
-void handle_0x6A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x6A(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [ROR Accumulator]: %02X", opcode);
         
@@ -853,7 +853,7 @@ void handle_0x6A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ROR Zero Page
-void handle_0x66(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x66(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "ROR", cpu, memory, ppu);
     ror(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -861,7 +861,7 @@ void handle_0x66(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ROR Zero Page, X    
-void handle_0x76(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x76(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "ROR", cpu, memory, ppu);
     ror(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -869,7 +869,7 @@ void handle_0x76(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ROR Absolute
-void handle_0x6E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x6E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "ROR", cpu, memory, ppu);
     ror(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -877,7 +877,7 @@ void handle_0x6E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ROR Absolute, X
-void handle_0x7E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x7E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "ROR", cpu, memory, ppu);
     ror(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -887,7 +887,7 @@ void handle_0x7E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== ROL ========
 
 // ROL Accumulator
-void handle_0x2A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x2A(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [ROL Accumulator]: %02X", opcode);
 
@@ -909,7 +909,7 @@ void handle_0x2A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ROL Zero Page
-void handle_0x26(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x26(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "ROL", cpu, memory, ppu);
     rol(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -917,7 +917,7 @@ void handle_0x26(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ROL Zero Page, X
-void handle_0x36(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x36(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "ROL", cpu, memory, ppu);
     rol(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -925,7 +925,7 @@ void handle_0x36(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ROL Absolute
-void handle_0x2E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x2E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "ROL", cpu, memory, ppu);
     rol(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -933,7 +933,7 @@ void handle_0x2E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ROL Absolute, X
-void handle_0x3E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x3E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "ROL", cpu, memory, ppu);
     rol(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -945,7 +945,7 @@ void handle_0x3E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== AND ======== 
 
 // AND #Immediate
-void handle_0x29(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x29(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "AND", cpu, memory, ppu);
     and(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -953,7 +953,7 @@ void handle_0x29(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // AND Zero Page
-void handle_0x25(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x25(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "AND", cpu, memory, ppu);
     and(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -961,7 +961,7 @@ void handle_0x25(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // AND Zero Page, X
-void handle_0x35(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x35(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "AND", cpu, memory, ppu);
     and(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -969,7 +969,7 @@ void handle_0x35(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // AND Absolute
-void handle_0x2D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x2D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "AND", cpu, memory, ppu);
     and(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -977,7 +977,7 @@ void handle_0x2D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // AND Absolute, X
-void handle_0x3D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x3D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "AND", cpu, memory, ppu);
     and(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -988,7 +988,7 @@ void handle_0x3D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // AND Absolute, Y
-void handle_0x39(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x39(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "AND", cpu, memory, ppu);
     and(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -999,7 +999,7 @@ void handle_0x39(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // AND (Indirect, X)
-void handle_0x21(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x21(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "AND", cpu, memory, ppu);
     and(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1007,7 +1007,7 @@ void handle_0x21(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // AND (Indirect), Y
-void handle_0x31(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x31(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "AND", cpu, memory, ppu);
     and(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -1020,7 +1020,7 @@ void handle_0x31(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== ORA ======== 
 
 // ORA #Immedaite
-void handle_0x09(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x09(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "ORA", cpu, memory, ppu);
     ora(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -1028,7 +1028,7 @@ void handle_0x09(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ORA Zero Page
-void handle_0x05(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x05(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "ORA", cpu, memory, ppu);
     ora(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -1036,7 +1036,7 @@ void handle_0x05(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ORA Zero Page, X
-void handle_0x15(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x15(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "ORA", cpu, memory, ppu);
     ora(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1044,7 +1044,7 @@ void handle_0x15(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ORA Absolute
-void handle_0x0D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x0D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "ORA", cpu, memory, ppu);
     ora(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1052,7 +1052,7 @@ void handle_0x0D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ORA Absolute, X
-void handle_0x1D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x1D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "ORA", cpu, memory, ppu);
     ora(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1063,7 +1063,7 @@ void handle_0x1D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ORA Absolute, Y
-void handle_0x19(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x19(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "ORA", cpu, memory, ppu);
     ora(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1074,7 +1074,7 @@ void handle_0x19(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ORA (Indirect, X)
-void handle_0x01(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x01(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "ORA", cpu, memory, ppu);
     ora(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1082,7 +1082,7 @@ void handle_0x01(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ORA (Indirect), Y
-void handle_0x11(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x11(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "ORA", cpu, memory, ppu);
     ora(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -1095,7 +1095,7 @@ void handle_0x11(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== EOR ======== 
 
 // EOR #Immedaite
-void handle_0x49(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x49(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "EOR", cpu, memory, ppu);
     eor(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -1103,7 +1103,7 @@ void handle_0x49(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // EOR Zero Page
-void handle_0x45(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x45(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "EOR", cpu, memory, ppu);
     eor(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -1111,7 +1111,7 @@ void handle_0x45(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // EOR Zero Page, X
-void handle_0x55(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x55(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "EOR", cpu, memory, ppu);
     eor(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1119,7 +1119,7 @@ void handle_0x55(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // EOR Absolute
-void handle_0x4D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x4D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "EOR", cpu, memory, ppu);
     eor(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1127,7 +1127,7 @@ void handle_0x4D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // EOR Absolute, X
-void handle_0x5D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x5D(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "EOR", cpu, memory, ppu);
     eor(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1138,7 +1138,7 @@ void handle_0x5D(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // EOR Absolute, Y
-void handle_0x59(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x59(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "EOR", cpu, memory, ppu);
     eor(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1149,7 +1149,7 @@ void handle_0x59(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // EOR (Indirect, X)
-void handle_0x41(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x41(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "EOR", cpu, memory, ppu);
     eor(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1157,7 +1157,7 @@ void handle_0x41(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // EOR (Indirect), Y
-void handle_0x51(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x51(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "EOR", cpu, memory, ppu);
     eor(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -1170,7 +1170,7 @@ void handle_0x51(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== BIT ======== 
 
 // BIT Zero Page
-void handle_0x24(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x24(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "BIT", cpu, memory, ppu);
     bit(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -1178,7 +1178,7 @@ void handle_0x24(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // BIT Absolute
-void handle_0x2C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x2C(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "BIT", cpu, memory, ppu);
     bit(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1190,7 +1190,7 @@ void handle_0x2C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== CMP ========
 
 // CMP #Immediate
-void handle_0xC9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xC9(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "CMP", cpu, memory, ppu);
     cmp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -1198,7 +1198,7 @@ void handle_0xC9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }  
 
 // CMP Zero Page
-void handle_0xC5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xC5(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "CMP", cpu, memory, ppu);
     cmp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -1206,7 +1206,7 @@ void handle_0xC5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }  
 
 // CMP Zero Page, X
-void handle_0xD5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xD5(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "CMP", cpu, memory, ppu);
     cmp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1214,7 +1214,7 @@ void handle_0xD5(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }  
 
 // CMP Absolute
-void handle_0xCD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xCD(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "CMP", cpu, memory, ppu);
     cmp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1222,7 +1222,7 @@ void handle_0xCD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }  
 
 // CMP Absolute, X
-void handle_0xDD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xDD(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "CMP", cpu, memory, ppu);
     cmp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1233,7 +1233,7 @@ void handle_0xDD(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 } 
 
 // CMP Absolute, Y
-void handle_0xD9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xD9(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "CMP", cpu, memory, ppu);
     cmp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1245,7 +1245,7 @@ void handle_0xD9(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
 
 // CMP (Indirect, X)
-void handle_0xC1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xC1(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "CMP", cpu, memory, ppu);
     cmp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1253,7 +1253,7 @@ void handle_0xC1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }  
 
 // CMP (Indirect), Y
-void handle_0xD1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xD1(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "CMP", cpu, memory, ppu);
     cmp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -1266,7 +1266,7 @@ void handle_0xD1(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== CPX ======== 
 
 // CPX #Immediate
-void handle_0xE0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xE0(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "CPX", cpu, memory, ppu);
     cpx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -1274,7 +1274,7 @@ void handle_0xE0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }  
 
 // CPX Zero Page
-void handle_0xE4(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xE4(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "CPX", cpu, memory, ppu);
     cpx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -1282,7 +1282,7 @@ void handle_0xE4(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 } 
 
 // CPX Absolute
-void handle_0xEC(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xEC(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "CPX", cpu, memory, ppu);
     cpx(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1292,7 +1292,7 @@ void handle_0xEC(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== CPY ======== 
 
 // CPY #Immediate
-void handle_0xC0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xC0(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "CPY", cpu, memory, ppu);
     cpy(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -1300,7 +1300,7 @@ void handle_0xC0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 } 
 
 // CPY Zero Page
-void handle_0xC4(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xC4(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "CPY", cpu, memory, ppu);
     cpy(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -1308,7 +1308,7 @@ void handle_0xC4(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 } 
         
 // CPY Absolute
-void handle_0xCC(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xCC(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "CPY", cpu, memory, ppu);
     cpy(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1318,7 +1318,7 @@ void handle_0xCC(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ==================== Branch ====================
 
 // BCC (Branch if Carry Clear)
-void handle_0x90(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x90(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     int8_t offset = (int8_t) memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [BCC Relative]: %02X %02X", opcode, (uint8_t) offset);
     cpu->cycles = 2;
@@ -1328,7 +1328,7 @@ void handle_0x90(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // BCS (Branch if Carry Set)
-void handle_0xB0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xB0(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     int8_t offset = (int8_t) memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [BCS Relative]: %02X %02X", opcode, (uint8_t) offset);
     cpu->cycles = 2;
@@ -1338,7 +1338,7 @@ void handle_0xB0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // BEQ (Branch if Equal)
-void handle_0xF0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xF0(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     int8_t offset = (int8_t) memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [BEQ Relative]: %02X %02X", opcode, (uint8_t) offset);
     cpu->cycles = 2;
@@ -1348,7 +1348,7 @@ void handle_0xF0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // BMI (Branch if Minus)
-void handle_0x30(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x30(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     int8_t offset = (int8_t) memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [BMI Relative]: %02X %02X", opcode, (uint8_t) offset);
     cpu->cycles = 2;
@@ -1358,7 +1358,7 @@ void handle_0x30(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // BNE (Branch if Not Equal)
-void handle_0xD0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xD0(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     int8_t offset = (int8_t) memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [BNE Relative]: %02X %02X", opcode, (uint8_t) offset);
     cpu->cycles = 2;
@@ -1368,7 +1368,7 @@ void handle_0xD0(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // BPL (Branch if Plus)
-void handle_0x10(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x10(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     int8_t offset = (int8_t) memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [BPL Relative]: %02X %02X", opcode, (uint8_t) offset);
     cpu->cycles = 2;
@@ -1378,7 +1378,7 @@ void handle_0x10(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // BVC (Branch if Overflow Clear)
-void handle_0x50(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x50(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     int8_t offset = (int8_t) memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [BVC Relative]: %02X %02X", opcode, (uint8_t) offset);
     cpu->cycles = 2;
@@ -1388,7 +1388,7 @@ void handle_0x50(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // BVS (Branch if Overflow Set)
-void handle_0x70(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x70(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     int8_t offset = (int8_t) memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [BVS Relative]: %02X %02X", opcode, (uint8_t) offset);
     cpu->cycles = 2;
@@ -1402,7 +1402,7 @@ void handle_0x70(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== JMP ======== 
 
 // JMP Absolute
-void handle_0x4C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x4C(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "JMP", cpu, memory, ppu);
     DEBUG_MSG_CPU("Jumping to address 0x%04X", effective_addr);
     cpu->PC = effective_addr;
@@ -1411,7 +1411,7 @@ void handle_0x4C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // JMP (Indirect)
-void handle_0x6C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x6C(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint8_t low = memory_read(cpu->PC++, memory, ppu);
     uint8_t high = memory_read(cpu->PC++, memory, ppu);
     uint16_t ptr = (high << 8) | low;
@@ -1438,7 +1438,7 @@ void handle_0x6C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== JSR ======== 
 
 // JSR (Jump to Subroutine)
-void handle_0x20(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x20(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint8_t low = memory_read(cpu->PC++, memory, ppu);
     uint8_t high = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [JSR]: %02X %02X %02X", opcode, low, high);
@@ -1462,7 +1462,7 @@ void handle_0x20(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== RTS ======== 
 
 // RTS (Return from Subroutine)
-void handle_0x60(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x60(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     DEBUG_MSG_CPU("Executing instruction [RTS]: %02X", opcode);
 
     // Pop address from top of the stack
@@ -1484,7 +1484,7 @@ void handle_0x60(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== BRK ======== 
 
 // BRK (Break)
-void handle_0x00(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x00(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     DEBUG_MSG_CPU("Executing instruction [BRK]: %02X", opcode);
 
     // The return address is PC + 2
@@ -1514,7 +1514,7 @@ void handle_0x00(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== RTI ======== 
 
 // RTI (Return from Interrupt)
-void handle_0x40(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x40(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     DEBUG_MSG_CPU("Executing instruction [RTI]: %02X", opcode);
 
     // Pop status flag from stack
@@ -1546,7 +1546,7 @@ void handle_0x40(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== PHP ======== 
 
 // PHP (Push Processor Status)
-void handle_0x08(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x08(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     DEBUG_MSG_CPU("Executing instruction [PHP]: %02X", opcode);
     uint8_t status = cpu->P | FLAG_BREAK;
     stack_push(status, cpu, memory, ppu);
@@ -1557,7 +1557,7 @@ void handle_0x08(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== PLP ======== 
 
 // PLP (Pull Processor Status)
-void handle_0x28(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x28(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     DEBUG_MSG_CPU("Executing instruction [PLP]: %02X", opcode);
     uint8_t value = stack_pop(cpu, memory, ppu);
 
@@ -1572,7 +1572,7 @@ void handle_0x28(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== PLA ======== 
 
 // Pull A
-void handle_0x68(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x68(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     DEBUG_MSG_CPU("Executing instruction [PLA]: %02X", opcode);
     cpu->A = stack_pop(cpu, memory, ppu);
     update_zero_and_negative_flags(cpu, cpu->A);
@@ -1583,7 +1583,7 @@ void handle_0x68(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== PHA ======== 
 
 // Push A
-void handle_0x48(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x48(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     DEBUG_MSG_CPU("Executing instruction [PHA]: %02X", opcode);
     stack_push(cpu->A, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -1591,7 +1591,7 @@ void handle_0x48(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // TSX Implied
-void handle_0xBA(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xBA(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [TSX]: %02X", opcode);
     DEBUG_MSG_CPU("Writing 0x%02X to register X", cpu->S);
@@ -1602,7 +1602,7 @@ void handle_0xBA(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // TXS Implied
-void handle_0x9A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x9A(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [TXS]: %02X", opcode);
     DEBUG_MSG_CPU("Writing 0x%02X to register S", cpu->X);
@@ -1614,7 +1614,7 @@ void handle_0x9A(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ==================== Flags ====================
 
 // CLC (Clear Carry)
-void handle_0x18(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x18(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [CLC]: %02X", opcode);
     cpu->P &= ~FLAG_CARRY;
@@ -1623,7 +1623,7 @@ void handle_0x18(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SEC (Set Carry)
-void handle_0x38(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x38(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [SEC]: %02X", opcode);
     cpu->P |= FLAG_CARRY;
@@ -1632,7 +1632,7 @@ void handle_0x38(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // CLD (Clear Decimal)
-void handle_0xD8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xD8(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [CLD]: %02X", opcode);
     cpu->P &= ~FLAG_DECIMAL;
@@ -1641,7 +1641,7 @@ void handle_0xD8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
         
 // SED (Set Decimal)
-void handle_0xF8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xF8(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [SED]: %02X", opcode);
     cpu->P |= FLAG_DECIMAL;
@@ -1650,7 +1650,7 @@ void handle_0xF8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // CLI (Clear Interrupt Disable)
-void handle_0x58(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x58(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [CLI]: %02X", opcode);
     cpu->P &= ~FLAG_INT;
@@ -1659,7 +1659,7 @@ void handle_0x58(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SEI (Set Interrupt Disable)
-void handle_0x78(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x78(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [SEI]: %02X", opcode);
     cpu->P |= FLAG_INT;
@@ -1668,7 +1668,7 @@ void handle_0x78(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // CLV (Clear Overflow)
-void handle_0xB8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xB8(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [CLV]: %02X", opcode);
     cpu->P &= ~FLAG_OVERFLOW;
@@ -1681,7 +1681,7 @@ void handle_0xB8(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== SLO ======== 
 
 // SLO Zero Page
-void handle_0x07(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x07(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "SLO", cpu, memory, ppu);
     slo(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -1689,7 +1689,7 @@ void handle_0x07(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SLO Zero Page, X
-void handle_0x17(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x17(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "SLO", cpu, memory, ppu);
     slo(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1697,7 +1697,7 @@ void handle_0x17(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SLO Absolute
-void handle_0x0F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x0F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "SLO", cpu, memory, ppu);
     slo(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1705,7 +1705,7 @@ void handle_0x0F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SLO Absolute, X
-void handle_0x1F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x1F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "SLO", cpu, memory, ppu);
     slo(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -1713,7 +1713,7 @@ void handle_0x1F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SLO Absolute, Y
-void handle_0x1B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x1B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "SLO", cpu, memory, ppu);
     slo(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -1721,7 +1721,7 @@ void handle_0x1B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SLO (Indirect, X)
-void handle_0x03(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x03(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "SLO", cpu, memory, ppu);
     slo(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -1729,7 +1729,7 @@ void handle_0x03(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SLO (Indirect), Y
-void handle_0x13(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x13(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "SLO", cpu, memory, ppu);
     slo(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -1739,7 +1739,7 @@ void handle_0x13(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== LAX ======== 
 
 // LAX Immediate (Highly Unstable)
-void handle_0xAB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xAB(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_immediate(opcode, "LAX", cpu, memory, ppu);
     lax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 2;
@@ -1747,7 +1747,7 @@ void handle_0xAB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LAX Zero Page
-void handle_0xA7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA7(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "LAX", cpu, memory, ppu);
     lax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -1755,7 +1755,7 @@ void handle_0xA7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
        
 // LAX Zero Page, Y
-void handle_0xB7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xB7(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_y(opcode, "LAX", cpu, memory, ppu);
     lax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1763,7 +1763,7 @@ void handle_0xB7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LAX Absolute
-void handle_0xAF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xAF(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "LAX", cpu, memory, ppu);
     lax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1771,7 +1771,7 @@ void handle_0xAF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LAX Absolute, Y
-void handle_0xBF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xBF(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "LAX", cpu, memory, ppu);
     lax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1782,7 +1782,7 @@ void handle_0xBF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LAX (Indirect, X)
-void handle_0xA3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xA3(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "LAX", cpu, memory, ppu);
     lax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1790,7 +1790,7 @@ void handle_0xA3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // LAX (Indirect), Y
-void handle_0xB3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xB3(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "LAX", cpu, memory, ppu);
     lax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -1803,7 +1803,7 @@ void handle_0xB3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== SAX ======== 
 
 // SAX Zero Page
-void handle_0x87(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x87(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "SAX", cpu, memory, ppu);
     sax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 3;
@@ -1811,7 +1811,7 @@ void handle_0x87(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SAX Zero Page, Y
-void handle_0x97(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x97(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_y(opcode, "SAX", cpu, memory, ppu);
     sax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1819,7 +1819,7 @@ void handle_0x97(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SAX Absolute
-void handle_0x8F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x8F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "SAX", cpu, memory, ppu);
     sax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 4;
@@ -1827,7 +1827,7 @@ void handle_0x8F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SAX (Indirect, X)
-void handle_0x83(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x83(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "SAX", cpu, memory, ppu);
     sax(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1837,7 +1837,7 @@ void handle_0x83(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== DCP ======== 
 
 // DCP Zero Page
-void handle_0xC7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xC7(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "DCP", cpu, memory, ppu);
     dcp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -1845,7 +1845,7 @@ void handle_0xC7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // DCP Zero Page, X
-void handle_0xD7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xD7(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "DCP", cpu, memory, ppu);
     dcp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1853,7 +1853,7 @@ void handle_0xD7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // DCP Absolute
-void handle_0xCF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xCF(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "DCP", cpu, memory, ppu);
     dcp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1861,7 +1861,7 @@ void handle_0xCF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // DCP Absolute, X
-void handle_0xDF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xDF(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "DCP", cpu, memory, ppu);
     dcp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -1869,7 +1869,7 @@ void handle_0xDF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // DCP Absolute, Y
-void handle_0xDB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xDB(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "DCP", cpu, memory, ppu);
     dcp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -1877,7 +1877,7 @@ void handle_0xDB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // DCP (Indirect, X)
-void handle_0xC3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xC3(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "DCP", cpu, memory, ppu);
     dcp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -1885,7 +1885,7 @@ void handle_0xC3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // DCP (Indirect), Y
-void handle_0xD3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xD3(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "DCP", cpu, memory, ppu);
     dcp(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -1895,7 +1895,7 @@ void handle_0xD3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== ISC ======== 
 
 // ISC Zero Page
-void handle_0xE7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xE7(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "ISC", cpu, memory, ppu);
     isc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -1903,7 +1903,7 @@ void handle_0xE7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ISC Zero Page, X
-void handle_0xF7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xF7(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "ISC", cpu, memory, ppu);
     isc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1911,7 +1911,7 @@ void handle_0xF7(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ISC Absolute
-void handle_0xEF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xEF(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "ISC", cpu, memory, ppu);
     isc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1919,7 +1919,7 @@ void handle_0xEF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ISC Absolute, X
-void handle_0xFF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xFF(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "ISC", cpu, memory, ppu);
     isc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -1927,7 +1927,7 @@ void handle_0xFF(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ISC Absolute, Y
-void handle_0xFB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xFB(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "ISC", cpu, memory, ppu);
     isc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -1935,7 +1935,7 @@ void handle_0xFB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ISC (Indirect, X)
-void handle_0xE3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xE3(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "ISC", cpu, memory, ppu);
     isc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -1943,7 +1943,7 @@ void handle_0xE3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // ISC (Indirect), Y
-void handle_0xF3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xF3(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "ISC", cpu, memory, ppu);
     isc(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -1953,7 +1953,7 @@ void handle_0xF3(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== RLA ======== 
 
 // RLA Zero Page
-void handle_0x27(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x27(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "RLA", cpu, memory, ppu);
     rla(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -1961,7 +1961,7 @@ void handle_0x27(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RLA Zero Page, X
-void handle_0x37(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x37(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "RLA", cpu, memory, ppu);
     rla(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1969,7 +1969,7 @@ void handle_0x37(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RLA Absolute
-void handle_0x2F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x2F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "RLA", cpu, memory, ppu);
     rla(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -1977,7 +1977,7 @@ void handle_0x2F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RLA Absolute, X
-void handle_0x3F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x3F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "RLA", cpu, memory, ppu);
     rla(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -1985,7 +1985,7 @@ void handle_0x3F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RLA Absolute, Y
-void handle_0x3B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x3B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "RLA", cpu, memory, ppu);
     rla(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -1993,7 +1993,7 @@ void handle_0x3B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RLA (Indirect, X)
-void handle_0x23(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x23(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "RLA", cpu, memory, ppu);
     rla(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -2001,7 +2001,7 @@ void handle_0x23(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RLA (Indirect), Y
-void handle_0x33(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x33(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "RLA", cpu, memory, ppu);
     rla(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -2011,7 +2011,7 @@ void handle_0x33(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== SRE ======== 
 
 // SRE Zero Page
-void handle_0x47(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x47(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "SRE", cpu, memory, ppu);
     sre(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -2019,7 +2019,7 @@ void handle_0x47(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SRE Zero Page, X
-void handle_0x57(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x57(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "SRE", cpu, memory, ppu);
     sre(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -2027,7 +2027,7 @@ void handle_0x57(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SRE Absolute
-void handle_0x4F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x4F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "SRE", cpu, memory, ppu);
     sre(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -2035,7 +2035,7 @@ void handle_0x4F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SRE Absolute, X
-void handle_0x5F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x5F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "SRE", cpu, memory, ppu);
     sre(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -2043,7 +2043,7 @@ void handle_0x5F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SRE Absolute, Y
-void handle_0x5B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x5B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "SRE", cpu, memory, ppu);
     sre(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -2051,7 +2051,7 @@ void handle_0x5B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SRE (Indirect, X)
-void handle_0x43(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x43(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "SRE", cpu, memory, ppu);
     sre(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -2059,7 +2059,7 @@ void handle_0x43(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // SRE (Indirect), Y
-void handle_0x53(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x53(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "SRE", cpu, memory, ppu);
     sre(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -2069,7 +2069,7 @@ void handle_0x53(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 // ======== RRA ======== 
 
 // RRA Zero Page
-void handle_0x67(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x67(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page(opcode, "RRA", cpu, memory, ppu);
     rra(effective_addr, cpu, memory, ppu);
     cpu->cycles = 5;
@@ -2077,7 +2077,7 @@ void handle_0x67(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RRA Zero Page, X
-void handle_0x77(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x77(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_zero_page_x(opcode, "RRA", cpu, memory, ppu);
     rra(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -2085,7 +2085,7 @@ void handle_0x77(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
         
 // RRA Absolute
-void handle_0x6F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x6F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute(opcode, "RRA", cpu, memory, ppu);
     rra(effective_addr, cpu, memory, ppu);
     cpu->cycles = 6;
@@ -2093,7 +2093,7 @@ void handle_0x6F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RRA Absolute, X
-void handle_0x7F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x7F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "RRA", cpu, memory, ppu);
     rra(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -2101,7 +2101,7 @@ void handle_0x7F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RRA Absolute, Y
-void handle_0x7B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x7B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "RRA", cpu, memory, ppu);
     rra(effective_addr, cpu, memory, ppu);
     cpu->cycles = 7;
@@ -2109,7 +2109,7 @@ void handle_0x7B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
     
 // RRA (Indirect, X)
-void handle_0x63(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x63(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_x(opcode, "RRA", cpu, memory, ppu);
     rra(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -2117,7 +2117,7 @@ void handle_0x63(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 }
 
 // RRA (Indirect), Y
-void handle_0x73(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x73(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "RRA", cpu, memory, ppu);
     rra(effective_addr, cpu, memory, ppu);
     cpu->cycles = 8;
@@ -2126,7 +2126,7 @@ void handle_0x73(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
         
 // ======== ANC ======== 
 
-void handle_0x0B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x0B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [ANC]: %02X %02X", opcode, value);
     cpu->A &= value;
@@ -2139,7 +2139,7 @@ void handle_0x0B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
     return;
 }
 
-void handle_0x2B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x2B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [ANC]: %02X %02X", opcode, value);
     cpu->A &= value;
@@ -2155,7 +2155,7 @@ void handle_0x2B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
 // ======== ALR ======== 
 
-void handle_0x4B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x4B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [ALR]: %02X %02X", opcode, value);
     cpu->A &= value;
@@ -2173,7 +2173,7 @@ void handle_0x4B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
 // ======== ARR ======== 
 
-void handle_0x6B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x6B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [ARR]: %02X %02X", opcode, value);
     cpu->A &= value;
@@ -2194,7 +2194,7 @@ void handle_0x6B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
         
 // ======== XAA ======== 
 
-void handle_0x8B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x8B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [XXA]: %02X %02X", opcode, value);
 
@@ -2208,7 +2208,7 @@ void handle_0x8B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
 // ======== AXS ======== 
 
-void handle_0xCB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xCB(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [AXS]: %02X %02X", opcode, value);
     uint8_t result = cpu->X & cpu->A;
@@ -2225,7 +2225,7 @@ void handle_0xCB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
 // ======== AHX ======== 
 
-void handle_0x93(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x93(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_indirect_y(opcode, "AHX", cpu, memory, ppu);
     uint16_t temp = ((effective_addr >> 8) + 1) & 0xFF;
     uint8_t value = cpu->A & cpu->X & temp;
@@ -2236,7 +2236,7 @@ void handle_0x93(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
           
 // ======== SHY ======== 
 
-void handle_0x9C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x9C(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_x(opcode, "SHY", cpu, memory, ppu);
     uint8_t value = cpu->Y & ((effective_addr >> 8) + 1);
     memory_write(effective_addr, value, memory, ppu);
@@ -2246,7 +2246,7 @@ void handle_0x9C(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
  
 // ======== AHX ======== 
 
-void handle_0x9F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x9F(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "AHX", cpu, memory, ppu);
     uint8_t value = cpu->A & cpu->X & ((effective_addr >> 8) + 1);
     memory_write(effective_addr, value, memory, ppu);
@@ -2256,7 +2256,7 @@ void handle_0x9F(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
 // ======== SHX ======== 
 
-void handle_0x9E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x9E(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "SHX", cpu, memory, ppu);
     uint8_t value = cpu->X & ((effective_addr >> 8) + 1);
     memory_write(effective_addr, value, memory, ppu);
@@ -2266,7 +2266,7 @@ void handle_0x9E(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
 // ======== TAS ======== 
 
-void handle_0x9B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0x9B(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "TAS", cpu, memory, ppu);
     cpu->S = cpu->A & cpu->X;
     uint8_t value = cpu->S & ((effective_addr >> 8) + 1);
@@ -2277,7 +2277,7 @@ void handle_0x9B(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
         
 // ======== LAS ======== 
 
-void handle_0xBB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void handle_0xBB(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu_absolute_y(opcode, "LAS", cpu, memory, ppu);
     uint8_t value = memory_read(effective_addr, memory, ppu) & cpu->S;
     cpu->A = cpu->X = cpu->S = value;
@@ -2286,7 +2286,7 @@ void handle_0xBB(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
     return;
 }
 
-void cpu_irq(CPU *cpu, uint8_t *memory, PPU *ppu) { // HARDWARE interrupts 
+void cpu_irq(CPU *cpu, MEM *memory, PPU *ppu) { // HARDWARE interrupts 
     if (!(cpu->P & FLAG_INT)) {
         DEBUG_MSG_CPU("Hardware Interrupt Triggered");
 
@@ -2314,7 +2314,7 @@ void cpu_irq(CPU *cpu, uint8_t *memory, PPU *ppu) { // HARDWARE interrupts
     }
 }
 
-void cpu_nmi(CPU *cpu, uint8_t *memory, PPU *ppu) { // Non-Maskable Interrupt
+void cpu_nmi(CPU *cpu, MEM *memory, PPU *ppu) { // Non-Maskable Interrupt
     DEBUG_MSG_CPU("NMI Triggered");
 
     cpu->service_int = 1; // signal that the interrupt is being serviced
@@ -2344,40 +2344,40 @@ void cpu_nmi(CPU *cpu, uint8_t *memory, PPU *ppu) { // Non-Maskable Interrupt
 
 // ======================= Instructions =======================
 
-void lda(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void lda(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu); 
     DEBUG_MSG_CPU("Writing 0x%02X to register A", value);
     cpu->A = value;
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void sta(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void sta(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     memory_write(effective_addr, cpu->A, memory, ppu);
 }
 
-void ldx(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void ldx(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu); 
     DEBUG_MSG_CPU("Writing 0x%02X to register X", value);
     cpu->X = value;
     update_zero_and_negative_flags(cpu, cpu->X);
 }
 
-void stx(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void stx(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     memory_write(effective_addr, cpu->X, memory, ppu);
 }
 
-void ldy(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void ldy(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu); 
     DEBUG_MSG_CPU("Writing 0x%02X to register Y", value);
     cpu->Y = value;
     update_zero_and_negative_flags(cpu, cpu->Y);
 }
 
-void sty(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void sty(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     memory_write(effective_addr, cpu->Y, memory, ppu);
 }
 
-void adc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void adc(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t operand = memory_read(effective_addr, memory, ppu);
     uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
     uint16_t result = cpu->A + operand + carry_in;
@@ -2390,7 +2390,7 @@ void adc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void sbc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void sbc(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t operand = memory_read(effective_addr, memory, ppu);
 
     uint8_t carry_in = (cpu->P & FLAG_CARRY) ? 1 : 0;
@@ -2404,7 +2404,7 @@ void sbc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void inc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void inc(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
     // Increment value and write back to memory
     value++; 
@@ -2412,7 +2412,7 @@ void inc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, value);
 }
 
-void dec(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void dec(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
     // decrement value and write back to memory
     value--;
@@ -2420,7 +2420,7 @@ void dec(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, value);
 }
 
-void lsr(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void lsr(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
 
     // Carry Flag
@@ -2436,7 +2436,7 @@ void lsr(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     cpu->P &= ~FLAG_NEGATIVE; // bit 8 is always cleared after shift
 }
 
-void asl(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void asl(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
 
     // Carry Flag
@@ -2452,7 +2452,7 @@ void asl(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     memory_write(effective_addr, value, memory, ppu);
 }
 
-void rol(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void rol(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
 
     uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 1 : 0;
@@ -2465,7 +2465,7 @@ void rol(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, value);
 }
 
-void ror(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void ror(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
 
     uint8_t old_carry = (cpu->P & FLAG_CARRY) ? 1 : 0;
@@ -2481,7 +2481,7 @@ void ror(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, value);
 }
 
-void and(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void and(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t operand = memory_read(effective_addr, memory, ppu);
     uint8_t value = cpu->A & operand;
     DEBUG_MSG_CPU("Writing 0x%02X to register A", value);
@@ -2489,7 +2489,7 @@ void and(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void ora(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void ora(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t operand = memory_read(effective_addr, memory, ppu);
     uint8_t value = cpu->A | operand;
     DEBUG_MSG_CPU("Writing 0x%02X to register A", value);
@@ -2497,7 +2497,7 @@ void ora(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void eor(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void eor(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t operand = memory_read(effective_addr, memory, ppu);
     uint8_t value = cpu->A ^ operand;
     DEBUG_MSG_CPU("Writing 0x%02X to register A", value);
@@ -2505,7 +2505,7 @@ void eor(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void bit(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void bit(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t operand = memory_read(effective_addr, memory, ppu);
 
     // Perform bitwise AND 
@@ -2517,7 +2517,7 @@ void bit(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     cpu->P = (operand & 0x80) ? (cpu->P | FLAG_NEGATIVE) : (cpu->P & ~FLAG_NEGATIVE);
 }
 
-void cmp(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void cmp(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
     uint8_t result = cpu->A - value;
 
@@ -2527,7 +2527,7 @@ void cmp(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     cpu->P = (result & 0x80) ? (cpu->P | FLAG_NEGATIVE) : (cpu->P & ~FLAG_NEGATIVE);
 }
 
-void cpx(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void cpx(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
     uint8_t result = cpu->X - value;
 
@@ -2537,7 +2537,7 @@ void cpx(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     cpu->P = (result & 0x80) ? (cpu->P | FLAG_NEGATIVE) : (cpu->P & ~FLAG_NEGATIVE);
 }
 
-void cpy(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void cpy(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
     uint8_t result = cpu->Y - value;
 
@@ -2559,7 +2559,7 @@ void branch(int condition, int8_t offset, CPU *cpu) {
     }
 }
 
-void slo(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void slo(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
 
     // Carry Flag
@@ -2576,20 +2576,20 @@ void slo(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void lax(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void lax(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
     cpu->A = value;
     cpu->X = value;
     update_zero_and_negative_flags(cpu, value);
 }
 
-void sax(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void sax(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     // Store A & X into memory
     uint8_t result = cpu->A & cpu->X;
     memory_write(effective_addr, result, memory, ppu);
 }
 
-void dcp(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void dcp(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
 
     value--; // Decrement memory
@@ -2604,7 +2604,7 @@ void dcp(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, result);
 }
 
-void isc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void isc(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
         
     value += 1; // Increment memory
@@ -2623,7 +2623,7 @@ void isc(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void rla(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void rla(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
 
     // Rotate Left through Carry
@@ -2639,7 +2639,7 @@ void rla(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void sre(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void sre(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
 
     // Carry Flag from bit 0 before shift
@@ -2655,7 +2655,7 @@ void sre(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void rra(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
+void rra(uint16_t effective_addr, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t value = memory_read(effective_addr, memory, ppu);
         
     // Rotate Right
@@ -2676,38 +2676,38 @@ void rra(uint16_t effective_addr, CPU *cpu, uint8_t *memory, PPU *ppu) {
     update_zero_and_negative_flags(cpu, cpu->A);
 }
 
-void nop_implied(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void nop_implied(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)cpu; (void)memory; (void)ppu;
     DEBUG_MSG_CPU("Executing instruction [NOP]: %02X", opcode);
     cpu->cycles = 2;
     return;
 }
 
-void nop_immediate(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void nop_immediate(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     cpu_immediate(opcode, "NOP", cpu, memory, ppu);
     cpu->cycles = 2;
     return;
 }
 
-void nop_zero_page(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void nop_zero_page(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     cpu_zero_page(opcode, "NOP", cpu, memory, ppu);
     cpu->cycles = 3;
     return;
 }
 
-void nop_zero_page_x(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void nop_zero_page_x(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     cpu_zero_page_x(opcode, "NOP", cpu, memory, ppu);
     cpu->cycles = 4;
     return;
 }
 
-void nop_absolute(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void nop_absolute(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     cpu_absolute(opcode, "NOP", cpu, memory, ppu);
     cpu->cycles = 4;
     return;
 }
 
-void nop_absolute_x(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void nop_absolute_x(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     cpu_absolute_x(opcode, "NOP", cpu, memory, ppu);
     cpu->cycles = 4;
     if (cpu->page_crossed) {
@@ -2716,7 +2716,7 @@ void nop_absolute_x(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
     return;
 }
 
-void invalid(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
+void invalid(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
     (void)cpu; (void)opcode; (void)memory; (void)ppu;
     cpu->PC++;
     cpu->cycles = 0;
@@ -2725,14 +2725,14 @@ void invalid(CPU *cpu, uint8_t opcode, uint8_t *memory, PPU *ppu) {
 
 // ======================= Addressing Modes =======================
 
-uint16_t cpu_immediate(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
+uint16_t cpu_immediate(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu) {
     uint16_t effective_addr = cpu->PC++;
     uint16_t immediate = memory_read(effective_addr, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [%s #Immediate]: %02X %02X", instruction, opcode, immediate);
     return effective_addr;
 }
 
-uint16_t cpu_zero_page(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
+uint16_t cpu_zero_page(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [%s ZeroPage]: %02X %02X", instruction, opcode, zero_addr);
 
@@ -2741,7 +2741,7 @@ uint16_t cpu_zero_page(uint8_t opcode, const char *instruction, CPU *cpu, uint8_
     return effective_addr;
 }
 
-uint16_t cpu_zero_page_x(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
+uint16_t cpu_zero_page_x(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [%s ZeroPage, X]: %02X %02X", instruction, opcode, zero_addr);
 
@@ -2751,7 +2751,7 @@ uint16_t cpu_zero_page_x(uint8_t opcode, const char *instruction, CPU *cpu, uint
     return effective_addr;
 }
 
-uint16_t cpu_zero_page_y(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
+uint16_t cpu_zero_page_y(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [%s ZeroPage, Y]: %02X %02X", instruction, opcode, zero_addr);
 
@@ -2761,7 +2761,7 @@ uint16_t cpu_zero_page_y(uint8_t opcode, const char *instruction, CPU *cpu, uint
     return effective_addr;
 }
 
-uint16_t cpu_absolute(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
+uint16_t cpu_absolute(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t low = memory_read(cpu->PC++, memory, ppu);
     uint8_t high = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [%s Absolute]: %02X %02X %02X", instruction, opcode, low, high);
@@ -2771,7 +2771,7 @@ uint16_t cpu_absolute(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t
     return effective_addr;
 }
 
-uint16_t cpu_absolute_x(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
+uint16_t cpu_absolute_x(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t low = memory_read(cpu->PC++, memory, ppu);
     uint8_t high = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [%s Absolute, X]: %02X %02X %02X", instruction, opcode, low, high);
@@ -2786,7 +2786,7 @@ uint16_t cpu_absolute_x(uint8_t opcode, const char *instruction, CPU *cpu, uint8
     return effective_addr;
 }
 
-uint16_t cpu_absolute_y(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
+uint16_t cpu_absolute_y(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t low = memory_read(cpu->PC++, memory, ppu);
     uint8_t high = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [%s Absolute, Y]: %02X %02X %02X", instruction, opcode, low, high);
@@ -2801,7 +2801,7 @@ uint16_t cpu_absolute_y(uint8_t opcode, const char *instruction, CPU *cpu, uint8
     return effective_addr;
 }
 
-uint16_t cpu_indirect_x(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
+uint16_t cpu_indirect_x(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [%s (Indirect, X)]: %02X %02X", instruction, opcode, zero_addr);
 
@@ -2817,7 +2817,7 @@ uint16_t cpu_indirect_x(uint8_t opcode, const char *instruction, CPU *cpu, uint8
     return effective_addr;
 }
 
-uint16_t cpu_indirect_y(uint8_t opcode, const char *instruction, CPU *cpu, uint8_t *memory, PPU *ppu) {
+uint16_t cpu_indirect_y(uint8_t opcode, const char *instruction, CPU *cpu, MEM *memory, PPU *ppu) {
     uint8_t zero_addr = memory_read(cpu->PC++, memory, ppu);
     DEBUG_MSG_CPU("Executing instruction [%s (Indirect), Y]: %02X %02X", instruction, opcode, zero_addr);
 

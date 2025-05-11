@@ -17,14 +17,14 @@
 FILE *log_file = NULL;
 
 int cycle();
-void load_rom(char *filename, uint8_t *memory, PPU *ppu);
+void load_rom(char *filename, MEM *memory, PPU *ppu);
 void initialize_display();
 void clean_up();
 void dump_memory_to_file(char *filename);
 void handle_sigint(int sig);
 
 CPU *cpu;
-uint8_t *memory;
+MEM *memory;
 PPU *ppu;
 CNTRL *controller;
 
@@ -138,9 +138,14 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // Run continously
+        int cycles_to_run = 2;
+        int cycles_executed = 0;
+        // Run continuously
         if (!step){
-            running = cycle();
+            while (cycles_executed < cycles_to_run && running) {
+                running = cycle();
+                cycles_executed++;
+            }
         }
 
         // check for breakpoint
@@ -182,7 +187,7 @@ int cycle() {
         if (frame_complete) {
             // calculate FPS
             clock_t curr_time = clock();
-            if (ppu->frames > 30) {
+            if (ppu->frames > 10) {
                 double elapsed = (double)(curr_time - last_time) / CLOCKS_PER_SEC;
                 ppu->FPS = ppu->frames / elapsed;
                 ppu->frames = 0;
@@ -206,7 +211,7 @@ int cycle() {
     return 1;
 }
 
-void load_rom(char *filename, uint8_t *memory, PPU *ppu) {
+void load_rom(char *filename, MEM *memory, PPU *ppu) {
     //////////////////////////////////////////////////////
     //                   iNES Format                    //
     //==================================================//
@@ -257,12 +262,12 @@ void load_rom(char *filename, uint8_t *memory, PPU *ppu) {
         fseek(rom, 512, SEEK_CUR); // Skip trainer
     }
 
-    // Load PRG ROM into CPU memory (at 0x8000)
-    fread(memory + 0x8000, 1, prg_size, rom);
+    // Load PRG ROM into CPU memory 
+    fread(memory->prg_rom, 1, prg_size, rom);
 
     // Mirror PRG ROM if it's only 16KB
     if (prg_size == 16384) {
-        memcpy(memory + 0xC000, memory + 0x8000, 16384);
+        memcpy(memory->prg_rom + 0x4000, memory->prg_rom, 16384);
     }
 
     // Load CHR ROM or allocate CHR RAM
@@ -298,16 +303,19 @@ void initialize_display(){
 void clean_up() {
     printf("Cleaning up...\n");
     // Save memory contents
-    dump_memory_to_file(MEMORY_OUTPUT_FILE); 
+    dump_memory_to_file(MEMORY_OUTPUT_FILE);
+
     // Free allocated memory
     printf("Freeing memory...\n");
     ppu_free(ppu);
     cpu_free(cpu);
     memory_free(memory);
     cntrl_free(controller);
+
     if (log_file) {
         fclose(log_file);
     }
+    
     printf("DONE\n");
 }
 

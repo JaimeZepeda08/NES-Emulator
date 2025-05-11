@@ -28,6 +28,12 @@
         "profiler.h": "c",
         "stdint.h": "c",
         "opcode_handlers.h": "c",
-        "signal.h": "c"
+        "signal.h": "c",
+        "__hash_table": "c",
+        "__split_buffer": "c",
+        "array": "c",
+        "deque": "c",
+        "unordered_map": "c",
+        "vector": "c"
     }
 }
