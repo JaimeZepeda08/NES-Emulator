@@ -1,0 +1,5 @@
+.vscode/
+cpu_memory.txt
+ppu_memory.txt
+compare_logs.py
+roms/

@@ -107,8 +107,6 @@ typedef struct PPU {
 PPU *ppu_init();
 void ppu_free(PPU *ppu);
 int ppu_run_cycle(PPU *ppu);
-uint32_t calculate_pixel_color(PPU *ppu, int x, int y);
-uint16_t mirror_nametable(PPU *ppu, uint16_t address);
 uint8_t ppu_read(PPU *ppu, uint16_t reg);
 void ppu_write(PPU *ppu, uint16_t reg, uint8_t value);
 void ppu_dump_registers(PPU *ppu);
