@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        int cycles_to_run = 2;
+        int cycles_to_run = 3;
         int cycles_executed = 0;
         // Run continuously
         if (!step){
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-int cycle() {
+int cycle() {    
     // log cpu to file if debug
     if (debug_enable && log_file) {
         fprintf(log_file, "%04X A:%02X X:%02X Y:%02X P:%02X S:%02X\n",

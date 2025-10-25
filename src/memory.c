@@ -62,7 +62,7 @@ uint8_t memory_read(uint16_t address, MEM *memory, PPU *ppu) {
 void memory_write(uint16_t address, uint8_t value, MEM *memory, PPU *ppu) {
     // OAMDMA
     if (address == 0x4014) {
-        uint16_t base = value << 8;
+        uint16_t base = value << 8; // high byte of address (page aligned)
         for (int i = 0; i < 256; i++) {
             uint8_t byte = memory_read(base + i, memory, ppu);
             ppu->oam[(ppu->OAMADDR + i) % 256] = byte;

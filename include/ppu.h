@@ -88,8 +88,8 @@ typedef struct PPU {
     // Internal Registers;
     uint16_t v; // Current VRAM address (15 bits)
     uint16_t t; // Temporary VRAM address (15 bits)
-    uint8_t x;  // Fine X scroll (3 bits)
     uint8_t w;  // First or second write toggle (1 bit)
+    uint8_t x;  // Fine X scroll (3 bits)
     uint8_t data_buffer; // buffers data read from PPU
 
     int nmi;

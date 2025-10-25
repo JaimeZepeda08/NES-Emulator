@@ -37,8 +37,8 @@ struct PPU *ppu_init() {
 
     ppu->v = 0;
     ppu->t = 0;
-    ppu->x = 0;
     ppu->w = 0;
+    ppu->x = 0;
     ppu->data_buffer = 0;
 
     ppu->nmi = 0;
@@ -59,26 +59,34 @@ void ppu_free(PPU *ppu) {
 int ppu_run_cycle(PPU *ppu) {
     int frame_complete = 0;
 
-    if (ppu->scanline == -1 && ppu->cycle == 1) {
-        ppu->PPUSTATUS &= ~PPUSTATUS_V; // Clear VBlank flag after the frame is complete
-        ppu->PPUSTATUS &= ~PPUSTATUS_S; // Clear Sprite 0 Hit mask for next frame
-
-        // Clear the frame buffer at the start of new frame
-        for (int i = 0; i < NES_WIDTH * NES_HEIGHT; i++) {
-            ppu->frame_buffer[i] = 0x000000FF; // black
+    // Pre render scanline 
+    if (ppu->scanline == -1) {
+        if (ppu->cycle == 1) {
+            ppu->PPUSTATUS &= ~PPUSTATUS_V; // Clear VBlank flag after the frame is complete
+            ppu->PPUSTATUS &= ~PPUSTATUS_S; // Clear Sprite 0 Hit mask for next frame
         }
-    }
 
-    // Non-visible scanlines --> game can modify screen
-    if (ppu->scanline == 241 && ppu->cycle == 1) {
-        ppu->PPUSTATUS |= PPUSTATUS_V; // Set VBlank flag
-        if ((ppu->PPUCTRL & PPUCNTRL_V) && ppu->nmi == 0) { // detects on rising edge of nmi
-            // signal cpu's NMI handler
-            ppu->nmi = 1;
+        // OAMADDR is set to 0 during each of ticks 257–320 of pre render scanline
+        if (ppu->cycle >= 257 && ppu->cycle <= 320) {
+            ppu->OAMADDR = 0;
         }
-    }
 
+        // Handle pre render scanline even/odd frames
+        if (ppu->frames % 1 == 0 && ppu->cycle == 339) {
+            ppu->cycle = 0;
+            ppu->scanline++;
+            return frame_complete;
+        }
+    }  
+
+    // Visible scanlines
     if (ppu->scanline >= 0 && ppu->scanline < NES_HEIGHT) {
+        // OAMADDR is set to 0 during each of ticks 257–320 of visible scanlines
+        if (ppu->cycle >= 257 && ppu->cycle <= 320) {
+            ppu->OAMADDR = 0;
+        }
+
+        // cycle 0 is idle
         if (ppu->cycle >= 1 && ppu->cycle <= NES_WIDTH) {
             int x = ppu->cycle - 1;
             int y = ppu->scanline;
@@ -88,12 +96,32 @@ int ppu_run_cycle(PPU *ppu) {
         }
     }
 
+    // Post render scanline
+    if (ppu->scanline == 240) {
+        // idle scan line
+    }
+
+    // Vertical blanking lines, non-visible scanlines
+    // game can modify screen
+    if (ppu->scanline >= 241) {
+        // VBlank flag is set at the second (cycle 1) tick of scanline 241
+        if (ppu->scanline == 241 && ppu->cycle == 1) {
+            ppu->PPUSTATUS |= PPUSTATUS_V; // Set VBlank flag
+        }
+
+        // if NMI is enabled, blanking VBlank NMI occurs here too 
+        if ((ppu->PPUCTRL & PPUCNTRL_V) && ppu->nmi == 0) { // detects on rising edge of nmi
+            // signal cpu's NMI handler
+            ppu->nmi = 1;
+        }
+    }
+
     // Advance cycle
     ppu->cycle++;
     if (ppu->cycle > 340) { // reached last horizontal cycle --> go to next scanline
         ppu->cycle = 0;
         ppu->scanline++;
-        if (ppu->scanline > 261) {  // reached bottom scanline
+        if (ppu->scanline >= 261) {  // reached bottom scanline
             ppu->scanline = -1; // pre-render scanline
             frame_complete = 1;
             ppu->frames++;
@@ -118,20 +146,25 @@ uint32_t get_background_pixel(PPU *ppu, int x, int y) {
 
     // Check if background rendering is enabled
     if ((ppu->PPUMASK & PPUMASK_b) && (x >= 8 || (ppu->PPUMASK & PPUMASK_m))) {
-        // Calculate tile indices and fine scroll within the tile
-        int tile_x = x / 8;
-        int tile_y = y / 8;
-        int fine_x = x % 8;
-        int fine_y = y % 8;
+        int scroll_x = ((ppu->t & 0x001F) << 3) | ppu->x;  // coarse X * 8 + fine X
+        int scroll_y = (((ppu->t >> 5) & 0x001F) << 3) | ((ppu->t >> 12) & 0x7); // coarse Y * 8 + fine Y
+
+        int scrolled_x = (x + scroll_x) % 512; // horizontal wrap
+        int scrolled_y = (y + scroll_y) % 480; // vertical wrap
+
+        int tile_x = (scrolled_x / 8) % 32;
+        int tile_y = (scrolled_y / 8) % 30;
+        int fine_x = scrolled_x % 8;
+        int fine_y = scrolled_y % 8;
 
         // Fetch nametable entry
         uint16_t base_nametable = 0x2000;
-        switch (((ppu->PPUCTRL & PPUCNTRL_N_HIGH) << 1) | (ppu->PPUCTRL & PPUCNTRL_N_LOW)) {
-            case 0b00: base_nametable = 0x2000; break;
-            case 0b01: base_nametable = 0x2400; break;
-            case 0b10: base_nametable = 0x2800; break;
-            case 0b11: base_nametable = 0x2C00; break;
-        }
+        if (scrolled_x >= 256 && scrolled_y < 240)
+            base_nametable = 0x2400;
+        else if (scrolled_x < 256 && scrolled_y >= 240)
+            base_nametable = 0x2800;
+        else if (scrolled_x >= 256 && scrolled_y >= 240)
+            base_nametable = 0x2C00;
         uint16_t nametable_address = mirror_nametable(ppu, base_nametable) + tile_y * 32 + tile_x;
         uint8_t tile_index = ppu->vram[nametable_address & 0x3FFF];
 
@@ -241,138 +274,19 @@ uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite
     return sprite_color;
 }
 
-// uint32_t calculate_pixel_color(PPU *ppu, int x, int y) {
-//     SDL_Color sdl_bg_color = nes_palette[ppu->vram[PALETTE_BASE]];
-//     uint32_t original_bg_color = (sdl_bg_color.r << 24) | (sdl_bg_color.g << 16) | (sdl_bg_color.b << 8) | 0xFF;
-//     uint32_t bg_color = original_bg_color;
-
-//     // 1. Background Rendering
-//     if ((ppu->PPUMASK & PPUMASK_b) && (x >= 8 || (ppu->PPUMASK & PPUMASK_m))) {
-//         // Calculate tile indices and fine scroll within the tile
-//         int tile_x = x / 8;
-//         int tile_y = y / 8;
-//         int fine_x = x % 8;
-//         int fine_y = y % 8;
-
-//         // Determine the base nametable address from PPUCTRL
-//         uint16_t base_nametable = 0x2000;
-//         switch (((ppu->PPUCTRL & PPUCNTRL_N_HIGH) << 1) | (ppu->PPUCTRL & PPUCNTRL_N_LOW)) {
-//             case 0b00: base_nametable = 0x2000; break;
-//             case 0b01: base_nametable = 0x2400; break;
-//             case 0b10: base_nametable = 0x2800; break;
-//             case 0b11: base_nametable = 0x2C00; break;
-//         }
-
-//         uint16_t nametable_address = mirror_nametable(ppu, base_nametable) + tile_y * 32 + tile_x;
-//         uint8_t tile_index = ppu->vram[nametable_address & 0x3FFF];
-
-//         // Find tile graphics in pattern table
-//         uint16_t pattern_table_addr = (ppu->PPUCTRL & PPUCNTRL_B) ? 0x1000 : 0x0000;
-//         uint16_t tile_address = pattern_table_addr + tile_index * 16;
-
-//         uint8_t bitplane0 = ppu->vram[(tile_address + fine_y) & 0x1FFF];
-//         uint8_t bitplane1 = ppu->vram[(tile_address + fine_y + 8) & 0x1FFF];
-
-//         int bit = 7 - fine_x;
-//         uint8_t pixel_low  = (bitplane0 >> bit) & 1;
-//         uint8_t pixel_high = (bitplane1 >> bit) & 1;
-//         uint8_t color_id = (pixel_high << 1) | pixel_low;
-
-//         if (color_id != 0) {
-//             uint16_t attr_address = mirror_nametable(ppu, base_nametable + 0x3C0 + (tile_y / 4) * 8 + (tile_x / 4));
-//             uint8_t attr_byte = ppu->vram[attr_address & 0x3FFF];
-
-//             int shift = ((tile_y % 4) / 2) * 4 + ((tile_x % 4) / 2) * 2;
-//             uint8_t palette_bits = (attr_byte >> shift) & 0x03;
-
-//             uint8_t palette_index = (palette_bits << 2) | color_id;
-//             uint16_t palette_address = PALETTE_BASE + (palette_index & 0x1F);
-//             SDL_Color color = nes_palette[ppu->vram[palette_address] & 0x3F];
-
-//             if (ppu->PPUMASK & PPUMASK_Gr) {
-//                 uint8_t gray = (color.r + color.g + color.b) / 3;
-//                 color.r = color.g = color.b = gray;
-//             }
-
-//             bg_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
-//         }
-//     } else {
-//         bg_color = 0x00000000;
-//     }
-
-//     // 2. Sprite Rendering
-//     uint32_t sprite_color = 0x00000000;
-//     int sprite_drawn = 0;
-
-//     if (ppu->PPUMASK & PPUMASK_s) {
-//         for (int i = 0; i < 64; i++) {
-//             int base = i * 4;
-//             uint8_t sprite_y = ppu->oam[base];
-//             uint8_t tile_index = ppu->oam[base + 1];
-//             uint8_t attr = ppu->oam[base + 2];
-//             uint8_t sprite_x = ppu->oam[base + 3];
-
-//             int sprite_height = (ppu->PPUCTRL & 0x20) ? 16 : 8;
-
-//             if (x < sprite_x || x >= sprite_x + 8 || y < sprite_y || y >= sprite_y + sprite_height) {
-//                 continue;
-//             }
-
-//             int sx = x - sprite_x;
-//             int sy = y - sprite_y;
-//             if (attr & 0x40) sx = 7 - sx;
-//             if (attr & 0x80) sy = sprite_height - 1 - sy;
-
-//             uint16_t pattern_table = (ppu->PPUCTRL & PPUCNTRL_S) ? 0x1000 : 0x0000;
-//             uint16_t tile_addr = pattern_table + tile_index * 16;
-//             if (sprite_height == 16) {
-//                 tile_addr = (tile_index & 0xFE) * 16 + ((tile_index & 1) ? 0x1000 : 0x0000);
-//             }
-
-//             uint8_t plane0 = ppu->vram[(tile_addr + sy) & 0x1FFF];
-//             uint8_t plane1 = ppu->vram[(tile_addr + sy + 8) & 0x1FFF];
-
-//             int bit = 7 - sx;
-//             uint8_t p0 = (plane0 >> bit) & 1;
-//             uint8_t p1 = (plane1 >> bit) & 1;
-//             uint8_t color_id = (p1 << 1) | p0;
-
-//             if (color_id == 0) continue;
-
-//             uint8_t palette_index = 0x10 + ((attr & 0x03) << 2) + color_id;
-//             uint16_t palette_addr = PALETTE_BASE + (palette_index & 0x1F);
-//             SDL_Color color = nes_palette[ppu->vram[palette_addr] & 0x3F];
-
-//             if (ppu->PPUMASK & PPUMASK_Gr) {
-//                 uint8_t gray = (color.r + color.g + color.b) / 3;
-//                 color.r = color.g = color.b = gray;
-//             }
-
-//             sprite_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
-
-//             // If sprite is in front of background OR background is transparent, draw sprite
-//             if ((attr & 0x20) == 0 || bg_color == 0x00000000) {
-//                 sprite_drawn = 1;
-//                 break;
-//             }
-
-//             // Sprite 0 Hit
-//             if (i == 0 && color_id != 0 && ((bg_color >> 24) & 0xFF) != 0) {
-//                 ppu->PPUSTATUS |= PPUSTATUS_S;
-//             }         
-//         }
-//     }
-
-//     // 3. Final pixel
-//     return sprite_drawn ? sprite_color : bg_color;
-// }
-
 uint16_t mirror_nametable(PPU *ppu, uint16_t address) {
     switch (ppu->mirroring) {
         case MIRROR_VERTICAL:
+            if (address >= 0x2800 && address < 0x2C00)
+                return address - 0x800;
+            if (address >= 0x2C00 && address < 0x3000)
+                return address - 0x800;
             break;
-
         case MIRROR_HORIZONTAL:
+            if (address >= 0x2400 && address < 0x2800)
+                return address - 0x400;
+            if (address >= 0x2C00 && address < 0x3000)
+                return address - 0x800;
             break;
     }
     return address;
@@ -381,31 +295,53 @@ uint16_t mirror_nametable(PPU *ppu, uint16_t address) {
 uint8_t ppu_read(PPU *ppu, uint16_t reg) {
     DEBUG_MSG_PPU("Reading register 0x%04X", reg);
     switch (reg) {
-        case PPUCTRL_REG:
-           return ppu->PPUCTRL;
-        
-        case PPUMASK_REG:
-            return ppu->PPUMASK;
+        // Write
+        case PPUCTRL_REG: {
+           ERROR_MSG("PPU", "PPUCTRL (0x2000) register is Write Only");
+           return 0xFF;
+        }
 
+        // Write
+        case PPUMASK_REG: {
+            ERROR_MSG("PPU", "PPUMASK (0x2001) register is Write Only");
+            return 0xFF;
+        }
+        
+        // Read
         case PPUSTATUS_REG: {
             uint8_t status = ppu->PPUSTATUS;
+            // reading PPUSTATUS clears VBlank flag and resets w register 
+            // this is done when the state of w may not be known 
             ppu->PPUSTATUS &= ~PPUSTATUS_V; // clear VBlank
             ppu->w = 0; // clear w register
             return status;
         }
         
-        case OAMADDR_REG:
-            return ppu->OAMADDR;
+        // Write 
+        case OAMADDR_REG: {
+            ERROR_MSG("PPU", "OAMADDR (0x2003) register is Write Only");
+            return 0xFF;
+        }
 
-        case OAMDATA_REG:
-            return ppu->OAMDATA;
-        
-        case PPUSCROLL_REG:
-            return ppu->PPUSCROLL;
+        // Read/Write
+        case OAMDATA_REG: {
+            return ppu->oam[ppu->OAMADDR]; // do not increase addr
+        }
 
-        case PPUADDR_REG:
-            return ppu->PPUADDR;
+        // Write (2 writes: X, Y)
+        case PPUSCROLL_REG: {
+            ERROR_MSG("PPU", "PPUSCROLL (0x2005) register is Write Only");
+            return 0xFF;
+        }
 
+        // Write (2 writes: MSB, LSB)
+        case PPUADDR_REG: {
+            ERROR_MSG("PPU", "PPUADDR (0x2006) register is Write Only");
+            return 0xFF;
+        }
+
+        // Read/Write
+        // Memory is byte-addressable, so each read/write accesses one byte
         case PPUDATA_REG: {
             // palette data can be read without buffering
             if (ppu->v >= PALETTE_BASE) {
@@ -427,7 +363,7 @@ uint8_t ppu_read(PPU *ppu, uint16_t reg) {
                 ppu->v += 32;
             } else {
                 ppu->v += 1;
-            } 
+            }
 
             return ppu->PPUDATA;
         }
@@ -440,61 +376,89 @@ uint8_t ppu_read(PPU *ppu, uint16_t reg) {
 void ppu_write(PPU *ppu, uint16_t reg, uint8_t value) {
     DEBUG_MSG_PPU("Writing 0x%02X to register 0x%04X", value, reg);
     switch (reg) {
-        case PPUCTRL_REG:
+        // Write 
+        case PPUCTRL_REG: {
             ppu->PPUCTRL = value;
+
+            // bits 0-1: base nametable address in t register
+            ppu->t = (ppu->t & 0xF3FF) | ((value & (PPUCNTRL_N_LOW | PPUCNTRL_N_HIGH)) << 10); // set bits 10-11 of t
+            
             break;
+        }
         
-        case PPUMASK_REG:
+        // Write
+        case PPUMASK_REG: {
             ppu->PPUMASK = value;
             break;
+        }
 
-        case PPUSTATUS_REG:
+        // Read
+        case PPUSTATUS_REG: {
             ERROR_MSG("PPU", "PPUSTATUS (0x2002) register is Read Only");
             break;
-        
-        case OAMADDR_REG:
+        }
+
+        // Write
+        case OAMADDR_REG: {
             ppu->OAMADDR = value;
             break;
+        }
 
-        case OAMDATA_REG:
+        // Read/Write
+        case OAMDATA_REG: {
             ppu->OAMDATA = value;
+            ppu->oam[ppu->OAMADDR] = ppu->OAMDATA;
+            ppu->OAMADDR += 1; // increase address after write
             break;
-        
+        }
+
+        // Write (2 writes: X, Y)
         case PPUSCROLL_REG: {
-            ppu->PPUSCROLL = value;  // Optional: store raw value for reference/debug
-        
+            ppu->PPUSCROLL = value; 
+
+            // takes 2 writes to set scroll position
+            // first write sets X scroll, second write sets Y scroll
+            // whether it is the first or second write is determined by w register
+
             if (ppu->w == 0) {
-                // First write: horizontal scroll
-                ppu->t = (ppu->t & 0x7FE0) | ((value >> 3) & 0x1F);  // coarse X (5 bits)
-                ppu->x = value & 0x07;                               // fine X (3 bits)
-                ppu->w = 1;
+                ppu->x = value & 0x07;                       // fine X scroll
+                ppu->t = (ppu->t & 0x7FE0) | (value >> 3);   // coarse X scroll
+                ppu->w = 1; // set w to 1 for second write
             } else {
-                // Second write: vertical scroll
-                ppu->t = (ppu->t & 0x0C1F) |
-                            (((value >> 3) & 0x1F) << 5) |              // coarse Y (5 bits)
-                            ((value & 0x07) << 12);                     // fine Y (3 bits)
-                ppu->w = 0;
+                ppu->t = (ppu->t & 0x0C1F)
+                        | ((value & 0x07) << 12)              // fine Y scroll
+                        | ((value & 0xF8) << 2);              // coarse Y scroll
+                ppu->w = 0; // reset w register
             }
             break;
         }
             
+        // Write (2 writes: MSB, LSB)
+        // VRAM has 14-bit address, so we need 2 writes to set full address
         case PPUADDR_REG: {
             ppu->PPUADDR = value;
+
+            // Write 16-bit address one byte at a time (high byte first)
+            // whether it is the first or second write is determined by w register
+
+            // First write (high byte)
             if (ppu->w == 0) {
-                ppu->t = (ppu->t & 0x00FF) | ((value & 0x3F) << 8);
-                ppu->w = 1;
-            } else {
-                ppu->t = (ppu->t & 0xFF00) | value;
-                ppu->v = ppu->t;
-                ppu->w = 0;
+                ppu->t = (ppu->t & 0x00FF) | ((value & 0x3F) << 8); // write high byte, only 14 bits (0x3FFF) used
+                ppu->w = 1; // set w to 1 for second write
+            } else { // Second write (low byte)
+                ppu->t = (ppu->t & 0xFF00) | value; // write low byte
+                ppu->v = ppu->t; // copy t to v for actual address
+                ppu->w = 0; // reset w register
             }
             break;
         }
 
+        // Read/Write
         case PPUDATA_REG: {
-            ppu->PPUDATA = value;
+            ppu->PPUDATA = value; // not an actual latch so not needed, only for debug
 
-            // Mirror writes to pallete
+            // Mirror writes to palette
+            // Uses v register set by PPUADDR writes
             if (ppu->v >= PALETTE_BASE) {
                 uint16_t palette_offset = ppu->v & 0x1F;
                 if ((palette_offset & 0x13) == 0x10) palette_offset &= ~0x10;
@@ -504,11 +468,11 @@ void ppu_write(PPU *ppu, uint16_t reg, uint8_t value) {
                 ppu->vram[ppu->v & 0x3FFF] = value;
             }
 
-            // Increase address after write
+            // Auto increment address after write based on PPUCTRL setting
             if (ppu->PPUCTRL & PPUCNTRL_I) {
-                ppu->v += 32;
+                ppu->v += 32; // next row
             } else {
-                ppu->v += 1;
+                ppu->v += 1; // next column
             } 
             break;
         }
