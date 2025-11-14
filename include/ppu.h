@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <SDL.h>
 
-#define VRAM_SIZE           0x4000
+// NES uses 8KB of physical VRAM, but PPU can address up to 16KB
+// Some areas are mirrored
+#define VRAM_SIZE           0x4000 
 
 ////////////////////////////////////////////////////
 //                PPU MEMORY MAP                  //
@@ -72,8 +74,8 @@
 extern SDL_Color nes_palette[64];
 
 typedef struct PPU {
-    uint8_t vram[VRAM_SIZE];
-    uint8_t oam[OAM_SIZE];
+    uint8_t vram[VRAM_SIZE]; // 16KB VRAM
+    uint8_t oam[OAM_SIZE]; // Object Attribute Memory (OAM) for sprites
 
     // Memory-Mapped Registers
     uint8_t PPUCTRL;
@@ -88,8 +90,8 @@ typedef struct PPU {
     // Internal Registers;
     uint16_t v; // Current VRAM address (15 bits)
     uint16_t t; // Temporary VRAM address (15 bits)
-    uint8_t w;  // First or second write toggle (1 bit)
     uint8_t x;  // Fine X scroll (3 bits)
+    uint8_t w;  // First or second write toggle (1 bit)
     uint8_t data_buffer; // buffers data read from PPU
 
     int nmi;

@@ -59,11 +59,14 @@ void ppu_free(PPU *ppu) {
 int ppu_run_cycle(PPU *ppu) {
     int frame_complete = 0;
 
-    // Pre render scanline 
+    // ============ Pre render scanline ============
+    // scan line -1 (261)
+
     if (ppu->scanline == -1) {
         if (ppu->cycle == 1) {
             ppu->PPUSTATUS &= ~PPUSTATUS_V; // Clear VBlank flag after the frame is complete
             ppu->PPUSTATUS &= ~PPUSTATUS_S; // Clear Sprite 0 Hit mask for next frame
+            ppu->PPUSTATUS &= ~PPUSTATUS_O; // Clear Sprite Overflow flag for next frame
         }
 
         // OAMADDR is set to 0 during each of ticks 257–320 of pre render scanline
@@ -79,7 +82,9 @@ int ppu_run_cycle(PPU *ppu) {
         }
     }  
 
-    // Visible scanlines
+    // ============ Visible scanlines ============
+    // scan lines 0-239
+
     if (ppu->scanline >= 0 && ppu->scanline < NES_HEIGHT) {
         // OAMADDR is set to 0 during each of ticks 257–320 of visible scanlines
         if (ppu->cycle >= 257 && ppu->cycle <= 320) {
@@ -91,28 +96,32 @@ int ppu_run_cycle(PPU *ppu) {
             int x = ppu->cycle - 1;
             int y = ppu->scanline;
 
-            // Draw pixel
+            // calculate color for this pixel and write to framebuffer
             ppu->frame_buffer[y * NES_WIDTH + x] = calculate_pixel_color(ppu, x, y);
         }
     }
 
-    // Post render scanline
+    // ============ Post render scanline ============
+    // scan line 240
+
     if (ppu->scanline == 240) {
         // idle scan line
     }
 
-    // Vertical blanking lines, non-visible scanlines
+    // ============  Vertical Blanking Period ============
+    // scan lines 241-260
     // game can modify screen
+
     if (ppu->scanline >= 241) {
         // VBlank flag is set at the second (cycle 1) tick of scanline 241
         if (ppu->scanline == 241 && ppu->cycle == 1) {
             ppu->PPUSTATUS |= PPUSTATUS_V; // Set VBlank flag
-        }
 
-        // if NMI is enabled, blanking VBlank NMI occurs here too 
-        if ((ppu->PPUCTRL & PPUCNTRL_V) && ppu->nmi == 0) { // detects on rising edge of nmi
-            // signal cpu's NMI handler
-            ppu->nmi = 1;
+            // if NMI is enabled, blanking VBlank NMI occurs here too 
+            if ((ppu->PPUCTRL & PPUCNTRL_V) && ppu->nmi == 0) { // detects on rising edge of nmi
+                // signal cpu's NMI handler
+                ppu->nmi = 1;
+            }
         }
     }
 
