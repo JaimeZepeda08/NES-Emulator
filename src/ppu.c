@@ -6,9 +6,8 @@
 #include "../include/memory.h"
 #include "../include/cpu.h"
 
-uint32_t calculate_pixel_color(PPU *ppu, int x, int y);
-uint32_t get_background_pixel(PPU *ppu, int x, int y);
-uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite_hit);
+uint32_t calculate_pixel_color(PPU *ppu);
+uint32_t get_background_pixel(PPU *ppu);
 uint16_t mirror_nametable(PPU *ppu, uint16_t address);
 
 struct PPU *ppu_init() {
@@ -37,8 +36,18 @@ struct PPU *ppu_init() {
 
     ppu->v = 0;
     ppu->t = 0;
-    ppu->w = 0;
     ppu->x = 0;
+
+    ppu->bg_next_tile_id = 0x00;
+    ppu->bg_next_tile_attrib = 0x00;
+    ppu->bg_next_tile_lsb = 0x00;
+    ppu->bg_next_tile_msb = 0x00;
+    ppu->bg_shifter_pattern_lo = 0x0000;
+    ppu->bg_shifter_pattern_hi = 0x0000;
+    ppu->bg_shifter_attrib_lo = 0x0000;
+    ppu->bg_shifter_attrib_hi = 0x0000;
+
+    ppu->w = 0;
     ppu->data_buffer = 0;
 
     ppu->nmi = 0;
@@ -61,57 +70,155 @@ int ppu_run_cycle(PPU *ppu) {
 
     // ============ Pre render scanline ============
     // scan line -1 (261)
-
     if (ppu->scanline == -1) {
         if (ppu->cycle == 1) {
             ppu->PPUSTATUS &= ~PPUSTATUS_V; // Clear VBlank flag after the frame is complete
             ppu->PPUSTATUS &= ~PPUSTATUS_S; // Clear Sprite 0 Hit mask for next frame
             ppu->PPUSTATUS &= ~PPUSTATUS_O; // Clear Sprite Overflow flag for next frame
         }
-
-        // OAMADDR is set to 0 during each of ticks 257–320 of pre render scanline
-        if (ppu->cycle >= 257 && ppu->cycle <= 320) {
-            ppu->OAMADDR = 0;
-        }
-
-        // Handle pre render scanline even/odd frames
-        if (ppu->frames % 1 == 0 && ppu->cycle == 339) {
-            ppu->cycle = 0;
-            ppu->scanline++;
-            return frame_complete;
-        }
     }  
 
-    // ============ Visible scanlines ============
-    // scan lines 0-239
+    if (ppu->scanline == 0 && ppu->cycle == 0) {
+        // skip cycle
+        ppu->cycle += 1;
+    }
 
-    if (ppu->scanline >= 0 && ppu->scanline < NES_HEIGHT) {
-        // OAMADDR is set to 0 during each of ticks 257–320 of visible scanlines
+    // ============ Visible scanlines ============
+    if (ppu->scanline >= -1 && ppu->scanline < 240) {
+        // idle cycle at cycle 0
+        if (ppu->cycle == 0) {}
+
+        // cycles 1-256 & 321-336: background fetching and shifter updates
+        if ((ppu->cycle >= 2 && ppu->cycle <= 257) || (ppu->cycle >= 321 && ppu->cycle <= 338)) {
+
+            // update shifters if rendering is enabled
+            if (ppu->PPUMASK & (PPUMASK_b | PPUMASK_s)) {
+                ppu->bg_shifter_pattern_lo <<= 1;
+                ppu->bg_shifter_pattern_hi <<= 1;
+                ppu->bg_shifter_attrib_lo <<= 1;
+                ppu->bg_shifter_attrib_hi <<= 1; 
+            }
+
+            switch ((ppu->cycle - 1) % 8) {
+                case 0: {
+                    // load shifters
+                    ppu->bg_shifter_pattern_lo = (ppu->bg_shifter_pattern_lo & 0xFF00) | ppu->bg_next_tile_lsb;
+                    ppu->bg_shifter_pattern_hi = (ppu->bg_shifter_pattern_hi & 0xFF00) | ppu->bg_next_tile_msb;
+                    ppu->bg_shifter_attrib_lo  = (ppu->bg_shifter_attrib_lo & 0xFF00) | ((ppu->bg_next_tile_attrib & 0b01) ? 0xFF : 0x00);
+		            ppu->bg_shifter_attrib_hi  = (ppu->bg_shifter_attrib_hi & 0xFF00) | ((ppu->bg_next_tile_attrib & 0b10) ? 0xFF : 0x00);
+
+                    // fetch next tile id
+                    uint16_t v_addr = 0x2000 | (ppu->v & 0x0FFF);
+                    uint16_t mirrored_addr = mirror_nametable(ppu, v_addr);
+                    ppu->bg_next_tile_id = ppu->vram[mirrored_addr];
+                    break; 
+                }
+                case 2: {
+                    // fetch attribute byte
+                    uint16_t v_addr = 0x23C0 | (ppu->v & 0x0C00) | ((ppu->v >> 4) & 0x38) | ((ppu->v >> 2) & 0x07);
+                    uint16_t mirrored_addr = mirror_nametable(ppu, v_addr);
+                    uint8_t attribute_byte = ppu->vram[mirrored_addr];
+
+                    // extract palette bits based on coarse X and Y
+                    uint8_t shift = ((ppu->v >> 4) & 4) | (ppu->v & 2);
+                    ppu->bg_next_tile_attrib = (attribute_byte >> shift) & 0b11;
+                    break;
+                }
+                case 4: {
+                    // fetch low byte of tile bitmap
+                    uint16_t fine_y = (ppu->v >> 12) & 0x7;
+                    uint16_t base_table_addr = (ppu->PPUCTRL & PPUCNTRL_B) ? 0x1000 : 0x0000;
+                    uint16_t tile_addr = base_table_addr + (ppu->bg_next_tile_id * 16) + fine_y;
+                    ppu->bg_next_tile_lsb = ppu->vram[tile_addr];
+                    break;
+                }
+                case 6: {
+                    // fetch high byte of tile bitmap
+                    uint16_t fine_y = (ppu->v >> 12) & 0x7;
+                    uint16_t base_table_addr = (ppu->PPUCTRL & PPUCNTRL_B) ? 0x1000 : 0x0000;
+                    uint16_t tile_addr = base_table_addr + (ppu->bg_next_tile_id * 16) + fine_y + 8;
+                    ppu->bg_next_tile_msb = ppu->vram[tile_addr];
+                    break;
+                }
+                case 7: {
+                    // increment horizontal position in v
+                    if (ppu->PPUMASK & (PPUMASK_b | PPUMASK_s)) {
+                        if ((ppu->v & 0x001F) == 31) {
+                            ppu->v &= ~0x001F;          // coarse X = 0
+                            ppu->v ^= 0x0400;           // switch horizontal nametable
+                        } else {
+                            ppu->v += 1;                 // increment coarse X
+                        }
+                    }
+                }
+            }
+        }
+
+        if (ppu->cycle == 256) {
+            // increment vertical position in v
+            if (ppu->PPUMASK & (PPUMASK_b | PPUMASK_s)) {
+                if ((ppu->v & 0x7000) != 0x7000) {
+                    ppu->v += 0x1000; // increment fine Y
+                } else {
+                    ppu->v &= ~0x7000; // fine Y = 0
+                    uint16_t coarse_y = (ppu->v & 0x03E0) >> 5;
+                    if (coarse_y == 29) {
+                        coarse_y = 0;
+                        ppu->v ^= 0x0800; // switch vertical nametable
+                    } else if (coarse_y == 31) {
+                        coarse_y = 0; // wrap around
+                    } else {
+                        coarse_y += 1; // increment coarse Y
+                    }
+                    ppu->v = (ppu->v & ~0x03E0) | (coarse_y << 5);
+                }
+            }
+        }
+
+        if (ppu->cycle == 257) {
+            // copy horizontal bits from t to v
+            if (ppu->PPUMASK & (PPUMASK_b | PPUMASK_s)) {
+                ppu->v = (ppu->v & 0xFBE0) | (ppu->t & 0x041F);
+            }
+        }
+
+        // OAMADDR reset
         if (ppu->cycle >= 257 && ppu->cycle <= 320) {
             ppu->OAMADDR = 0;
         }
 
-        // cycle 0 is idle
-        if (ppu->cycle >= 1 && ppu->cycle <= NES_WIDTH) {
+        if (ppu->cycle == 338 || ppu->cycle == 340) {
+            // fetch next tile id (odd frame skip)
+            uint16_t v_addr = 0x2000 | (ppu->v & 0x0FFF);
+            uint16_t mirrored_addr = mirror_nametable(ppu, v_addr);
+            ppu->bg_next_tile_id = ppu->vram[mirrored_addr];
+        }
+
+        if (ppu->scanline == -1 && ppu->cycle >= 280 && ppu->cycle < 305)
+		{
+            // copy vertical bits from t to v during pre-render scanline
+            if (ppu->PPUMASK & (PPUMASK_b | PPUMASK_s)) {
+                ppu->v = (ppu->v & 0x041F) | (ppu->t & 0xFBE0);
+            }
+		}
+
+        // Render pixel during cycles 1-256
+        if (ppu->scanline >= 0 && ppu->cycle >= 1 && ppu->cycle <= 256) {
             int x = ppu->cycle - 1;
             int y = ppu->scanline;
-
-            // calculate color for this pixel and write to framebuffer
-            ppu->frame_buffer[y * NES_WIDTH + x] = calculate_pixel_color(ppu, x, y);
+            ppu->frame_buffer[y * 256 + x] = calculate_pixel_color(ppu);
         }
     }
 
     // ============ Post render scanline ============
     // scan line 240
-
     if (ppu->scanline == 240) {
         // idle scan line
     }
 
     // ============  Vertical Blanking Period ============
     // scan lines 241-260
-    // game can modify screen
-
+    // game can modify screen during this period
     if (ppu->scanline >= 241) {
         // VBlank flag is set at the second (cycle 1) tick of scanline 241
         if (ppu->scanline == 241 && ppu->cycle == 1) {
@@ -140,147 +247,39 @@ int ppu_run_cycle(PPU *ppu) {
     return frame_complete;
 }
 
-uint32_t calculate_pixel_color(PPU *ppu, int x, int y) {
-    int sprite_hit = 0;
-    uint32_t bg_color = get_background_pixel(ppu, x, y);
-    uint32_t sprite_color = get_sprite_pixel(ppu, x, y, bg_color, &sprite_hit);
-    if (sprite_hit) {
-        ppu->PPUSTATUS |= PPUSTATUS_S;
-    }
-    return sprite_color != 0 ? sprite_color : bg_color;
+uint32_t calculate_pixel_color(PPU *ppu) {
+    return get_background_pixel(ppu);
 }
 
-uint32_t get_background_pixel(PPU *ppu, int x, int y) {
-    uint32_t bg_color = 0x00000000; // black
-
-    // Check if background rendering is enabled
-    if ((ppu->PPUMASK & PPUMASK_b) && (x >= 8 || (ppu->PPUMASK & PPUMASK_m))) {
-        int scroll_x = ((ppu->t & 0x001F) << 3) | ppu->x;  // coarse X * 8 + fine X
-        int scroll_y = (((ppu->t >> 5) & 0x001F) << 3) | ((ppu->t >> 12) & 0x7); // coarse Y * 8 + fine Y
-
-        int scrolled_x = (x + scroll_x) % 512; // horizontal wrap
-        int scrolled_y = (y + scroll_y) % 480; // vertical wrap
-
-        int tile_x = (scrolled_x / 8) % 32;
-        int tile_y = (scrolled_y / 8) % 30;
-        int fine_x = scrolled_x % 8;
-        int fine_y = scrolled_y % 8;
-
-        // Fetch nametable entry
-        uint16_t base_nametable = 0x2000;
-        if (scrolled_x >= 256 && scrolled_y < 240)
-            base_nametable = 0x2400;
-        else if (scrolled_x < 256 && scrolled_y >= 240)
-            base_nametable = 0x2800;
-        else if (scrolled_x >= 256 && scrolled_y >= 240)
-            base_nametable = 0x2C00;
-        uint16_t nametable_address = mirror_nametable(ppu, base_nametable) + tile_y * 32 + tile_x;
-        uint8_t tile_index = ppu->vram[nametable_address & 0x3FFF];
-
-        // Get corresponding pattern table
-        uint16_t pattern_table_addr = (ppu->PPUCTRL & PPUCNTRL_B) ? 0x1000 : 0x0000;
-        uint16_t tile_address = pattern_table_addr + tile_index * 16;
-        uint8_t bitplane0 = ppu->vram[(tile_address + fine_y) & 0x1FFF];
-        uint8_t bitplane1 = ppu->vram[(tile_address + fine_y + 8) & 0x1FFF];
-        int bit = 7 - fine_x;
-
-        // Get low byte
-        uint8_t pixel_low  = (bitplane0 >> bit) & 1;
-
-        // Get high byte
-        uint8_t pixel_high = (bitplane1 >> bit) & 1;
-
-        // Get palette index
-        uint8_t color_id = (pixel_high << 1) | pixel_low;
-
-        if (color_id % 4 != 0) {
-            // Fetch corresponding attribute table entry
-            uint16_t attr_address = mirror_nametable(ppu, base_nametable + 0x3C0 + (tile_y / 4) * 8 + (tile_x / 4));
-            uint8_t attr_byte = ppu->vram[attr_address & 0x3FFF];
-
-            int shift = ((tile_y % 4) / 2) * 4 + ((tile_x % 4) / 2) * 2;
-            uint8_t palette_bits = (attr_byte >> shift) & 0x03;
-
-            uint8_t palette_index = (palette_bits << 2) | color_id;
-            uint16_t palette_address = PALETTE_BASE + (palette_index & 0x1F);
-            SDL_Color color = nes_palette[ppu->vram[palette_address] & 0x3F];
-
-            if (ppu->PPUMASK & PPUMASK_Gr) {
-                uint8_t gray = (color.r + color.g + color.b) / 3;
-                color.r = color.g = color.b = gray;
-            }
-
-            bg_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
-        } else {
-            // universal background color if color_id % 4 == 0
-            SDL_Color sdl_bg_color = nes_palette[ppu->vram[PALETTE_BASE]];
-            bg_color = (sdl_bg_color.r << 24) | (sdl_bg_color.g << 16) | (sdl_bg_color.b << 8) | 0xFF;
-        }
+uint32_t get_background_pixel(PPU *ppu) {
+    if (!(ppu->PPUMASK & PPUMASK_b)) {
+        // background rendering is disabled
+        return 0x000000FF;
     }
 
-    return bg_color;
-}
+    // get the bit corresponding to the current fine x scroll
+    uint16_t bit_mux = 0x8000 >> ppu->x;
 
-uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite_hit) {
-    uint32_t sprite_color = 0x00000000; // black 
+    // extract the two bits for the pixel from the pattern shifters
+    uint8_t p0_pixel = (ppu->bg_shifter_pattern_lo & bit_mux) ? 1 : 0;
+    uint8_t p1_pixel = (ppu->bg_shifter_pattern_hi & bit_mux) ? 1 : 0;
+    uint8_t bg_pixel = (p1_pixel << 1) | p0_pixel;
 
-    if (ppu->PPUMASK & PPUMASK_s) {
-        for (int i = 0; i < 64; i++) {
-            int base = i * 4;
-            uint8_t sprite_y = ppu->oam[base];
-            uint8_t tile_index = ppu->oam[base + 1];
-            uint8_t attr = ppu->oam[base + 2];
-            uint8_t sprite_x = ppu->oam[base + 3];
+    // extract the two bits for the palette from the attribute shifters
+    uint8_t bg_pal0 = (ppu->bg_shifter_attrib_lo & bit_mux) ? 1 : 0;
+    uint8_t bg_pal1 = (ppu->bg_shifter_attrib_hi & bit_mux) ? 1 : 0;
+    uint8_t bg_palette = (bg_pal1 << 1) | bg_pal0;
 
-            int sprite_height = (ppu->PPUCTRL & 0x20) ? 16 : 8;
-
-            if (x < sprite_x || x >= sprite_x + 8 || y < sprite_y || y >= sprite_y + sprite_height) {
-                continue;
-            }
-
-            int sx = x - sprite_x;
-            int sy = y - sprite_y;
-            if (attr & 0x40) sx = 7 - sx;
-            if (attr & 0x80) sy = sprite_height - 1 - sy;
-
-            uint16_t pattern_table = (ppu->PPUCTRL & PPUCNTRL_S) ? 0x1000 : 0x0000;
-            uint16_t tile_addr = pattern_table + tile_index * 16;
-            if (sprite_height == 16) {
-                tile_addr = (tile_index & 0xFE) * 16 + ((tile_index & 1) ? 0x1000 : 0x0000);
-            }
-
-            uint8_t plane0 = ppu->vram[(tile_addr + sy) & 0x1FFF];
-            uint8_t plane1 = ppu->vram[(tile_addr + sy + 8) & 0x1FFF];
-
-            int bit = 7 - sx;
-            uint8_t p0 = (plane0 >> bit) & 1;
-            uint8_t p1 = (plane1 >> bit) & 1;
-            uint8_t color_id = (p1 << 1) | p0;
-
-            if (color_id == 0) continue;
-
-            uint8_t palette_index = 0x10 + ((attr & 0x03) << 2) + color_id;
-            uint16_t palette_addr = PALETTE_BASE + (palette_index & 0x1F);
-            SDL_Color color = nes_palette[ppu->vram[palette_addr] & 0x3F];
-
-            if (ppu->PPUMASK & PPUMASK_Gr) {
-                uint8_t gray = (color.r + color.g + color.b) / 3;
-                color.r = color.g = color.b = gray;
-            }
-
-            // If sprite is in front of background OR background is transparent, draw sprite
-            if ((attr & 0x20) == 0) {
-                sprite_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
-            }
-
-            // Sprite 0 Hit
-            if (i == 0 && color_id != 0 && ((bg_color >> 24) & 0xFF) != 0) {
-                *sprite_hit = 1;
-            }         
-        }
+    // get final color from palette
+    uint8_t color_id = 0;
+    if (bg_pixel != 0) {
+        color_id = ppu->vram[PALETTE_BASE + (bg_palette << 2) + bg_pixel] & 0x3F;
+    } else {
+        color_id = ppu->vram[PALETTE_BASE]; // background color
     }
 
-    return sprite_color;
+    SDL_Color sdl_bg_color = nes_palette[color_id];
+    return (sdl_bg_color.r << 24) | (sdl_bg_color.g << 16) | (sdl_bg_color.b << 8) | 0xFF;
 }
 
 uint16_t mirror_nametable(PPU *ppu, uint16_t address) {

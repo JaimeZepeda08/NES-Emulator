@@ -86,15 +86,34 @@ typedef struct PPU {
     uint8_t PPUSCROLL;
     uint8_t PPUADDR;
     uint8_t PPUDATA;
-
-    // Internal Registers;
+    
+    // Loopy registers
+    // yyy NN YYYYY XXXXX
+    // ||| || ||||| +++++-- coarse X scroll (5 bits)
+    // ||| || +++++-------- coarse Y scroll (5 bits)
+    // ||| ++-------------- nametable select (2 bits)
+    // +++----------------- fine Y scroll (3 bits)
     uint16_t v; // Current VRAM address (15 bits)
     uint16_t t; // Temporary VRAM address (15 bits)
     uint8_t x;  // Fine X scroll (3 bits)
+
+    // Background rendering
+	uint8_t bg_next_tile_id; // name table id
+	uint8_t bg_next_tile_attrib; // attribute table byte
+	uint8_t bg_next_tile_lsb; // pattern table low byte
+	uint8_t bg_next_tile_msb; // pattern table high byte
+	uint16_t bg_shifter_pattern_lo;
+	uint16_t bg_shifter_pattern_hi;
+	uint16_t bg_shifter_attrib_lo;
+	uint16_t bg_shifter_attrib_hi;
+
+    // write toggle
     uint8_t w;  // First or second write toggle (1 bit)
+
+    // buffer
     uint8_t data_buffer; // buffers data read from PPU
 
-    int nmi;
+    int nmi; // nmi interrupt flag
 
     int cycle;      // [0, 340]
     int scanline;   // [-1, 260], where -1 is the pre-render line, 0–239 are visible, 240 is post-render, 241–260 is VBlank
