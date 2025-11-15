@@ -90,7 +90,7 @@ int ppu_run_cycle(PPU *ppu) {
         if (ppu->cycle == 0) {}
 
         // cycles 1-256 & 321-336: background fetching and shifter updates
-        if ((ppu->cycle >= 2 && ppu->cycle <= 257) || (ppu->cycle >= 321 && ppu->cycle <= 338)) {
+        if ((ppu->cycle >= 3 && ppu->cycle <= 257) || (ppu->cycle >= 321 && ppu->cycle <= 338)) {
 
             // update shifters if rendering is enabled
             if (ppu->PPUMASK & (PPUMASK_b | PPUMASK_s)) {
