@@ -6,8 +6,9 @@
 #include "../include/memory.h"
 #include "../include/cpu.h"
 
-uint32_t calculate_pixel_color(PPU *ppu);
+uint32_t calculate_pixel_color(PPU *ppu, int x, int y);
 uint32_t get_background_pixel(PPU *ppu);
+uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite_hit);
 uint16_t mirror_nametable(PPU *ppu, uint16_t address);
 
 struct PPU *ppu_init() {
@@ -206,7 +207,7 @@ int ppu_run_cycle(PPU *ppu) {
         if (ppu->scanline >= 0 && ppu->cycle >= 1 && ppu->cycle <= 256) {
             int x = ppu->cycle - 1;
             int y = ppu->scanline;
-            ppu->frame_buffer[y * 256 + x] = calculate_pixel_color(ppu);
+            ppu->frame_buffer[y * 256 + x] = calculate_pixel_color(ppu, x, y);
         }
     }
 
@@ -247,8 +248,14 @@ int ppu_run_cycle(PPU *ppu) {
     return frame_complete;
 }
 
-uint32_t calculate_pixel_color(PPU *ppu) {
-    return get_background_pixel(ppu);
+uint32_t calculate_pixel_color(PPU *ppu, int x, int y) {
+    int sprite_hit = 0;
+    uint32_t bg_color = get_background_pixel(ppu);
+    uint32_t sprite_color = get_sprite_pixel(ppu, x, y, bg_color, &sprite_hit);
+    if (sprite_hit) {
+        ppu->PPUSTATUS |= PPUSTATUS_S;
+    }
+    return sprite_color != 0 ? sprite_color : bg_color;
 }
 
 uint32_t get_background_pixel(PPU *ppu) {
@@ -280,6 +287,68 @@ uint32_t get_background_pixel(PPU *ppu) {
 
     SDL_Color sdl_bg_color = nes_palette[color_id];
     return (sdl_bg_color.r << 24) | (sdl_bg_color.g << 16) | (sdl_bg_color.b << 8) | 0xFF;
+}
+
+uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite_hit) {
+    uint32_t sprite_color = 0x00000000; // black 
+
+    if (ppu->PPUMASK & PPUMASK_s) {
+        for (int i = 0; i < 64; i++) {
+            int base = i * 4;
+            uint8_t sprite_y = ppu->oam[base];
+            uint8_t tile_index = ppu->oam[base + 1];
+            uint8_t attr = ppu->oam[base + 2];
+            uint8_t sprite_x = ppu->oam[base + 3];
+
+            int sprite_height = (ppu->PPUCTRL & 0x20) ? 16 : 8;
+
+            if (x < sprite_x || x >= sprite_x + 8 || y < sprite_y || y >= sprite_y + sprite_height) {
+                continue;
+            }
+
+            int sx = x - sprite_x;
+            int sy = y - sprite_y;
+            if (attr & 0x40) sx = 7 - sx;
+            if (attr & 0x80) sy = sprite_height - 1 - sy;
+
+            uint16_t pattern_table = (ppu->PPUCTRL & PPUCNTRL_S) ? 0x1000 : 0x0000;
+            uint16_t tile_addr = pattern_table + tile_index * 16;
+            if (sprite_height == 16) {
+                tile_addr = (tile_index & 0xFE) * 16 + ((tile_index & 1) ? 0x1000 : 0x0000);
+            }
+
+            uint8_t plane0 = ppu->vram[(tile_addr + sy) & 0x1FFF];
+            uint8_t plane1 = ppu->vram[(tile_addr + sy + 8) & 0x1FFF];
+
+            int bit = 7 - sx;
+            uint8_t p0 = (plane0 >> bit) & 1;
+            uint8_t p1 = (plane1 >> bit) & 1;
+            uint8_t color_id = (p1 << 1) | p0;
+
+            if (color_id == 0) continue;
+
+            uint8_t palette_index = 0x10 + ((attr & 0x03) << 2) + color_id;
+            uint16_t palette_addr = PALETTE_BASE + (palette_index & 0x1F);
+            SDL_Color color = nes_palette[ppu->vram[palette_addr] & 0x3F];
+
+            if (ppu->PPUMASK & PPUMASK_Gr) {
+                uint8_t gray = (color.r + color.g + color.b) / 3;
+                color.r = color.g = color.b = gray;
+            }
+
+            // If sprite is in front of background OR background is transparent, draw sprite
+            if ((attr & 0x20) == 0) {
+                sprite_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
+            }
+
+            // Sprite 0 Hit
+            if (i == 0 && color_id != 0 && ((bg_color >> 24) & 0xFF) != 0) {
+                *sprite_hit = 1;
+            }         
+        }
+    }
+
+    return sprite_color;
 }
 
 uint16_t mirror_nametable(PPU *ppu, uint16_t address) {
