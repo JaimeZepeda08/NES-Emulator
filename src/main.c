@@ -35,29 +35,72 @@ TTF_Font *font;
 
 clock_t last_time;
 
+int pt_enable = 0; // pattern table and register display
+
 int debug_enable = 0;
 uint16_t breakpoint = 0xFFFF;
 int at_break = 0;
 
 int main(int argc, char *argv[]) {
-    if (argc < 2 || argc > 5) {
-        fprintf(stderr, "Usage: %s <rom.nes> [--debug] [--break <address>]\n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <rom.nes> [--pt] [--debug] [--break <addr>]\n", argv[0]);
         exit(1);
     }
 
-    char *rom = argv[1];
+    char *rom = NULL;
+    int i = 1;
 
-    // Check for debug flag
-    if (argc >= 3 && strcmp(argv[2], "--debug") == 0) {
-        debug_enable = 1;
+    while (i < argc) {
+        // ROM file
+        if (argv[i][0] != '-') {
+            if (rom != NULL) {
+                fprintf(stderr, "Error: multiple ROM files provided.\n");
+                exit(1);
+            }
+            rom = argv[i];
+            i++;
+            continue;
+        }
+
+        // --pt flag for pattern table display
+        if (strcmp(argv[i], "--pt") == 0) {
+            pt_enable = 1;
+            i++;
+            continue;
+        }
+
+        // --debug flag
+        if (strcmp(argv[i], "--debug") == 0) {
+            debug_enable = 1;
+            i++;
+            continue;
+        }
+
+        // --break <address>
+        if (strcmp(argv[i], "--break") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "Error: --break requires a hex address.\n");
+                exit(1);
+            }
+
+            if (sscanf(argv[i + 1], "%hx", &breakpoint) != 1) {
+                fprintf(stderr, "Invalid hex address for --break (example: 8000 or 0x8000).\n");
+                exit(1);
+            }
+
+            i += 2;
+            continue;
+        }
+
+        // Unknown flag
+        fprintf(stderr, "Unknown option: %s\n", argv[i]);
+        exit(1);
     }
 
-    // Check for breakpoint flag
-    if (argc == 5 && strcmp(argv[3], "--break") == 0) {
-        if (sscanf(argv[4], "%hx", &breakpoint) != 1) {
-            fprintf(stderr, "Invalid address format for --break. Use hex format (e.g., 0x8000).\n");
-            exit(1);
-        }
+    // Must have at least one ROM file
+    if (rom == NULL) {
+        fprintf(stderr, "Error: No ROM file specified.\n");
+        exit(1);
     }
 
     printf("Booting up NES Emulator...\n");
@@ -195,7 +238,7 @@ int cycle() {
             }
 
             // render display
-            render_display(renderer, ppu, cpu, game_texture, font);
+            render_display(renderer, ppu, cpu, game_texture, font, pt_enable);
         }
     }
 
@@ -286,7 +329,7 @@ void load_rom(char *filename, MEM *memory, PPU *ppu) {
 }
 
 void initialize_display(){
-    window = window_init();
+    window = window_init(pt_enable);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (TTF_Init() < 0) {
         printf("TTF Init failed: %s\n", TTF_GetError());

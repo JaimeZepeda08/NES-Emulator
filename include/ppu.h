@@ -4,9 +4,8 @@
 #include <stdint.h>
 #include <SDL.h>
 
-// NES uses 8KB of physical VRAM, but PPU can address up to 16KB
-// Some areas are mirrored
-#define VRAM_SIZE           0x4000 
+#define NES_WIDTH           256
+#define NES_HEIGHT          240
 
 ////////////////////////////////////////////////////
 //                PPU MEMORY MAP                  //
@@ -24,9 +23,17 @@
 // 0x3F20-0x3FFF    |   Mirror of 0x3F00-0x3F1F   //
 ////////////////////////////////////////////////////
 
+// NES uses 8KB of physical VRAM, but PPU can address up to 16KB
+// Some areas are mirrored
+#define VRAM_SIZE           0x4000 
+
+// Size of Object Attribute Memory (OAM) for sprites
+// Each sprite takes 4 bytes, total 64 sprites, 256 bytes
+// Byte 0: Y position
+// Byte 1: Tile index
+// Byte 2: Attributes (palette, priority, flip)
+// Byte 3: X position
 #define OAM_SIZE            256
-#define NES_WIDTH           256
-#define NES_HEIGHT          240
 
 #define MIRROR_VERTICAL     0
 #define MIRROR_HORIZONTAL   1
