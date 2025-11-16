@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
     char *rom = NULL;
     int i = 1;
 
+    // parse cli arguments
     while (i < argc) {
         // ROM file
         if (argv[i][0] != '-') {
@@ -217,11 +218,8 @@ int cycle() {
                 cpu->S);
     }
 
-    // Fetch-Decode-Execute next instruction
-    uint8_t opcode = memory_read(cpu->PC++, memory, ppu);
-
-    // Execute intstruction
-    cpu_execute_opcode(cpu, opcode, memory, ppu);
+    // run cpu cycle
+    cpu_run_cycle(cpu, memory, ppu);
 
     // Run PPU (3 * cycles completed by CPU)
     DEBUG_MSG_PPU("Running %i PPU cycles...", 3 * cpu->cycles);

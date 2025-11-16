@@ -31,7 +31,7 @@ typedef struct CPU {
 
 CPU *cpu_init(MEM *memory);
 void cpu_free(CPU *cpu);
-void cpu_execute_opcode(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu);
+void cpu_run_cycle(CPU *cpu, MEM *memory, PPU *ppu);
 void cpu_irq(CPU *cpu, MEM *memory, PPU *ppu);
 void cpu_nmi(CPU *cpu, MEM *memory, PPU *ppu);
 void cpu_dump_registers(CPU *cpu);

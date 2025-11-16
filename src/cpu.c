@@ -106,16 +106,21 @@ void cpu_free(CPU *cpu) {
     free(cpu);
 }
 
-void cpu_execute_opcode(CPU *cpu, uint8_t opcode, MEM *memory, PPU *ppu) {
+void cpu_run_cycle(CPU *cpu, MEM *memory, PPU *ppu) {
+    // fetch next opcode
+    uint8_t opcode = memory_read(cpu->PC++, memory, ppu);
+
     cpu->cycles = 0;
     cpu->page_crossed = 0;
 
-    if (ppu->nmi == 1 && cpu->service_int == 0) { // Handle NMI interrupt
+    // handle NMI interrupt
+    if (ppu->nmi == 1 && cpu->service_int == 0) { 
         cpu->PC--; // decrement because we incremented when calling the function
         cpu_nmi(cpu, memory, ppu);
         return;
     }
 
+    // execute instruction
     opcode_table[opcode](cpu, opcode, memory, ppu);
 }
 
