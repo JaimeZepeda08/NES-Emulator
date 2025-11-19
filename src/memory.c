@@ -3,6 +3,7 @@
 #include "../include/ppu.h"
 #include "../include/cpu.h"
 #include "../include/input.h"
+#include "../include/apu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +36,12 @@ uint8_t memory_read(uint16_t address, MEM *memory, PPU *ppu) {
         return ppu_read(ppu, address);
     }
 
-    // Controller Shift Registers
+    // APU registers
+    if (address == 0x4015) {
+        return apu_read(apu, address);
+    }
+
+    // Controller Shift Registers (only player 1 is implemented)
     if (address == 0x4016 || address == 0x4017) {
         return cntrl_read(controller);
     }
@@ -67,33 +73,33 @@ void memory_write(uint16_t address, uint8_t value, MEM *memory, PPU *ppu) {
             uint8_t byte = memory_read(base + i, memory, ppu);
             ppu->oam[(ppu->OAMADDR + i) % 256] = byte;
         }
-        return;
     }
 
     // PPU Memory Mapped Registers
     if (address >= 0x2000 && address <= 0x3FFF) {
         address = 0x2000 + (address % 8);
         ppu_write(ppu, address, value);
-        return;
     }
 
-    // Controller Shift Registers
+    // APU registers
+    if ((address >= 0x4000 && address <= 0x4013) || (address == 0x4015) || (address == 0x4017)) {
+        apu_write(apu, address, value);
+    }
+
+    // Controller Shift Registers (only player 1 is implemented)
     if (address == 0x4016 || address == 0x4017) {
         cntrl_write(controller, value);
-        return;
     }
 
     // Internal RAM
     if (address <= 0x1FFF) {
         memory->ram[address % 0x0800] = value;
         DEBUG_MSG_MEM("Wrote 0x%02X to RAM at 0x%04X", value, address);
-        return;
     }
 
     // Writes to PRG ROM are ignored in NROM
     if (address >= 0x8000) {
         DEBUG_MSG_MEM("Attempted to write 0x%02X to ROM at 0x%04X (ignored)", value, address);
-        return;
     }
 
     // Unmapped

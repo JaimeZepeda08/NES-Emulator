@@ -12,6 +12,7 @@
 #include "../include/ppu.h"
 #include "../include/input.h"
 #include "../include/display.h"
+#include "../include/apu.h"
 
 #define MEMORY_OUTPUT_FILE "memory.txt"
 FILE *log_file = NULL;
@@ -24,8 +25,9 @@ void dump_memory_to_file(char *filename);
 void handle_sigint(int sig);
 
 CPU *cpu;
-MEM *memory;
 PPU *ppu;
+APU *apu;
+MEM *memory;
 CNTRL *controller;
 
 SDL_Window *window;
@@ -124,6 +126,9 @@ int main(int argc, char *argv[]) {
     // Initialize CPU
     cpu = cpu_init(memory);
 
+    // Initialize APU
+    apu = apu_init();
+
     // Initialize Display
     initialize_display();
 
@@ -221,7 +226,7 @@ int cycle() {
     // run cpu cycle
     cpu_run_cycle(cpu, memory, ppu);
 
-    // Run PPU (3 * cycles completed by CPU)
+    // run PPU (3 * cycles completed by CPU)
     DEBUG_MSG_PPU("Running %i PPU cycles...", 3 * cpu->cycles);
     for (int i = 0; i < 3 * cpu->cycles; i++) {
         int frame_complete = ppu_run_cycle(ppu);
@@ -240,8 +245,7 @@ int cycle() {
         }
     }
 
-    // Run APU
-    // TODO
+    // APU cycle is called by the audio callback function
 
     if (debug_enable) {
         cpu_dump_registers(cpu);
@@ -350,6 +354,7 @@ void clean_up() {
     printf("Freeing memory...\n");
     ppu_free(ppu);
     cpu_free(cpu);
+    apu_free(apu);
     memory_free(memory);
     cntrl_free(controller);
 

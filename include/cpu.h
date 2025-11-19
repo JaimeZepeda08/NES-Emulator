@@ -18,12 +18,12 @@ typedef struct PPU PPU;
 #define FLAG_NEGATIVE       0x80 // Bit 8 (N)
 
 typedef struct CPU {
-    u_int8_t A;         // Accumulator
-    u_int8_t X;         // X Register
-    u_int8_t Y;         // Y Register
-    u_int16_t PC;       // Program Counter
-    u_int8_t S;         // Stack Pointer
-    u_int8_t P;         // Status Register
+    uint8_t A;         // Accumulator
+    uint8_t X;         // X Register
+    uint8_t Y;         // Y Register
+    uint16_t PC;       // Program Counter
+    uint8_t S;         // Stack Pointer
+    uint8_t P;         // Status Register
     int cycles;         // Cycle counter --> important to synchronize with PPU and APU
     int page_crossed;   // 1 if page was crossed during instruction
     int service_int;    // if 1, then an interrupt is being serviced
