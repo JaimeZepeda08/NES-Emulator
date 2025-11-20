@@ -5,7 +5,6 @@
 #include <signal.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
-#include <time.h>
 #include "../include/cpu.h"
 #include "../include/memory.h"
 #include "../include/log.h"
@@ -13,6 +12,9 @@
 #include "../include/input.h"
 #include "../include/display.h"
 #include "../include/apu.h"
+
+#define NES_CPU_CLOCK 1789773 // 1.789773 MHz
+#define CYCLES_PER_FRAME (NES_CPU_CLOCK / 60) // ~29829.55 cycles per 1/60th second
 
 #define MEMORY_OUTPUT_FILE "memory.txt"
 FILE *log_file = NULL;
@@ -35,7 +37,7 @@ SDL_Renderer *renderer;
 SDL_Texture *game_texture;
 TTF_Font *font;
 
-clock_t last_time;
+uint32_t last_time;
 
 int pt_enable = 0; // pattern table and register display
 
@@ -109,7 +111,7 @@ int main(int argc, char *argv[]) {
     printf("Booting up NES Emulator...\n");
 
     // get initial time
-    last_time = clock();
+    last_time = SDL_GetTicks();
 
     // Register signal handler for SIGINT
     signal(SIGINT, handle_sigint);
@@ -187,13 +189,27 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        int cycles_to_run = 3;
-        int cycles_executed = 0;
-        // Run continuously
-        if (!step){
-            while (cycles_executed < cycles_to_run && running) {
-                running = cycle();
-                cycles_executed++;
+        if (!step) { // run continuously
+            int cycles_this_frame = 0;
+            uint32_t frame_start = SDL_GetTicks();
+
+            // run enough CPU cycles to simulate 1/60th of a second
+            while (cycles_this_frame < CYCLES_PER_FRAME && running) {
+                running = cycle();                   // run some number of cycles (depends on cpu instruction)
+                cycles_this_frame += cpu->cycles;    // get actual number of cycles run
+
+                // handle infitite loop edge case
+                if (cpu->cycles == 0) {
+                    cycles_this_frame++;
+                }
+            }
+
+            uint32_t frame_end = SDL_GetTicks();
+            double elapsed_ms = (double)(frame_end - frame_start);
+            double target_ms = 1000.0 / 60.0; // 16.6667 ms
+            if (elapsed_ms < target_ms) {
+                // delay if its running too fast (limit to ~60 FPS)
+                SDL_Delay((Uint32)(target_ms - elapsed_ms));
             }
         }
 
@@ -232,12 +248,12 @@ int cycle() {
         int frame_complete = ppu_run_cycle(ppu);
         if (frame_complete) {
             // calculate FPS
-            clock_t curr_time = clock();
+            uint32_t curr_time = SDL_GetTicks();
             if (ppu->frames > 10) {
-                double elapsed = (double)(curr_time - last_time) / CLOCKS_PER_SEC;
+                double elapsed = (double)(curr_time - last_time) / 1000.0;
                 ppu->FPS = ppu->frames / elapsed;
                 ppu->frames = 0;
-                last_time = clock();
+                last_time = SDL_GetTicks();
             }
 
             // render display
