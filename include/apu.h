@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define APU_SAMPLE_RATE 44100
+#define APU_SAMPLE_RATE 88000
 #define CPU_CLOCK 1789773
 
 typedef struct MEM MEM;
@@ -57,6 +57,29 @@ typedef struct TriangleChannel {
     int16_t output; // holds the most recent output value for audio_callback
 } TriangleChannel;
 
+typedef struct NoiseChannel {
+    // 0x400C
+    int env_loop;
+    int constant_vol;
+    uint8_t volume;
+
+    // 0x400E
+    int mode; // LFSR mode
+    uint16_t period; // frequency timer
+
+    // 0x400F
+    uint8_t length; // duration timer
+
+    // state variables
+    uint16_t timer_counter;
+    uint16_t lfsr; // shift register
+    uint8_t envelope_divider;
+    uint8_t envelope_counter;
+    uint8_t envelope_start;
+    uint8_t length_counter;
+    int16_t output; // holds the most recent output value for audio_callback
+} NoiseChannel;
+
 typedef struct APU {
     SDL_AudioDeviceID audio_dev;
 
@@ -76,6 +99,7 @@ typedef struct APU {
     PulseChannel pulse1;
     PulseChannel pulse2;
     TriangleChannel triangle;
+    NoiseChannel noise;
 } APU;
 
 APU *apu_init();
