@@ -4,15 +4,15 @@
 #include "../include/memory.h"
 
 void audio_callback(void *userdata, Uint8 *stream, int len);
-void pulse_channel(PulseChannel *ch);
-void triangle_channel(TriangleChannel *ch);
-void noise_channel(NoiseChannel *ch);
+void pulse_channel(PulseChannel *ch, int quarter_frame, int half_frame);
+void triangle_channel(TriangleChannel *ch, int quarter_frame, int half_frame);
+void noise_channel(NoiseChannel *ch, int quarter_frame, int half_frame);
 
 #define QUARTER_FRAME_CYCLES 7457
 #define HALF_FRAME_CYCLES 14913
 
-static int apu_quarter_frame = 0;
-static int apu_half_frame = 0;
+static int apu_quarter_frame_counter = 0;
+static int apu_half_frame_counter = 0;
 
 static const uint8_t pulse_length[32] = {
     10, 254, 20, 2, 40, 4, 80, 6,
@@ -96,7 +96,7 @@ void audio_callback(void *userdata, Uint8 *stream, int len) {
             cycle_accum -= 1.0;
         }
 
-        // simple linear mix of channels
+        // simple linear mix of channels (also used to control volume of each channel)
         int32_t mixed = (int32_t)apu->pulse1.output / 2
                         + (int32_t)apu->pulse2.output / 2
                         + (int32_t)apu->triangle.output * 2
@@ -107,79 +107,81 @@ void audio_callback(void *userdata, Uint8 *stream, int len) {
 }
 
 void apu_run_cycle(APU *apu) {
+    // increment frame counters
+    apu_quarter_frame_counter++;
+    apu_half_frame_counter++;
+
+    int quarter_frame = 0; // quarter-frame flag
+    int half_frame = 0; // half-frame flag
+
+    // check if it is time to run updates in channels
+    if (apu_quarter_frame_counter >= QUARTER_FRAME_CYCLES) {
+        apu_quarter_frame_counter -= QUARTER_FRAME_CYCLES;
+        quarter_frame = 1;
+    }
+    if (apu_half_frame_counter >= HALF_FRAME_CYCLES) {
+        apu_half_frame_counter -= HALF_FRAME_CYCLES;
+        half_frame = 1;
+    }
+
     // update pulse channel 1
     PulseChannel *pulse1 = &apu->pulse1;
-    pulse_channel(pulse1);
+    pulse_channel(pulse1, quarter_frame, half_frame);
 
     // update pulse channel 2
     PulseChannel *pulse2 = &apu->pulse2;
-    pulse_channel(pulse2);
-
+    pulse_channel(pulse2, quarter_frame, half_frame);
     // update triangle channel
     TriangleChannel *triangle = &apu->triangle;
-    triangle_channel(triangle);
+    triangle_channel(triangle, quarter_frame, half_frame);
 
     // update noise channel
     NoiseChannel *noise = &apu->noise;
-    noise_channel(noise);
+    noise_channel(noise, quarter_frame, half_frame);
+}
 
-    apu_quarter_frame++;
-    apu_half_frame++;
-    int quarter_tick = 0;
-    int half_tick = 0;
-    if (apu_quarter_frame >= QUARTER_FRAME_CYCLES) {
-        apu_quarter_frame -= QUARTER_FRAME_CYCLES;
-        quarter_tick = 1;
-    }
-    if (apu_half_frame >= HALF_FRAME_CYCLES) {
-        apu_half_frame -= HALF_FRAME_CYCLES;
-        half_tick = 1;
+void pulse_channel(PulseChannel *ch, int quarter_frame, int half_frame) {
+    // timer and sequencer
+    if (ch->timer_counter == 0) {
+        ch->timer_counter = ch->timer + 1;
+        ch->seq_pos = (ch->seq_pos + 1) & 0x07;
+    } else {
+        ch->timer_counter--;
     }
 
-    // quarter frame updates (envelopes for pulse and noise channels)
-    if (quarter_tick) {
-        // pulse channels envelope
+    // envelope (run at quarter-frame) 
+    if (quarter_frame) {
         for (int i = 0; i < 2; i++) {
-            PulseChannel *ch = (i == 0) ? &apu->pulse1 : &apu->pulse2; // iterate over both pulse channels
             if (ch->envelope_start) {
                 ch->envelope_counter = 15;
                 ch->envelope_divider = ch->volume;
                 ch->envelope_start = 0;
             } else {
                 if (ch->envelope_divider == 0) {
-                    if (ch->envelope_counter > 0) ch->envelope_counter--;
-                    else if (ch->env_loop) ch->envelope_counter = 15;
+                    if (ch->envelope_counter > 0) {
+                        ch->envelope_counter--;
+                    } else if (ch->env_loop) {
+                        ch->envelope_counter = 15;
+                    }
                     ch->envelope_divider = ch->volume;
                 } else {
                     ch->envelope_divider--;
                 }
             }
         }
+    }
 
-        // noise channel envelope
-        NoiseChannel *nch = &apu->noise;
-        if (nch->envelope_start) {
-            nch->envelope_counter = 15;
-            nch->envelope_divider = nch->volume;
-            nch->envelope_start = 0;
-        } else {
-            if (nch->envelope_divider == 0) {
-                if (nch->envelope_counter > 0) nch->envelope_counter--;
-                else if (nch->env_loop) nch->envelope_counter = 15;
-                nch->envelope_divider = nch->volume;
-            } else {
-                nch->envelope_divider--;
-            }
+    // length counter (run at half-frame)
+    if (half_frame) {
+        if (!ch->env_loop && ch->length_counter > 0) {
+            ch->length_counter = (ch->length_counter - 2 >= 0) ? ch->length_counter - 2 : 0;
         }
     }
 
-    // half frame updates (length counters and sweep units for pulse, triangle, and noise channels)
-    if (half_tick) {
-        // pulse channels length counters and sweep units
+    // sweep unit (run at half-frame)
+    if (half_frame) {
+        // loop twice (not sure why but it works)
         for (int i = 0; i < 2; i++) {
-            PulseChannel *ch = (i == 0) ? &apu->pulse1 : &apu->pulse2;
-            if (!ch->env_loop && ch->length_counter > 0) ch->length_counter--;
-            // Sweep logic here, using ch->period as divider
             if (ch->sweep_reload) {
                 ch->sweep_divider = ch->period;
                 ch->sweep_reload = 0;
@@ -189,81 +191,11 @@ void apu_run_cycle(APU *apu) {
                 ch->sweep_divider = ch->period;
                 if (ch->sweep_en && ch->shift > 0 && ch->timer > 7) {
                     uint16_t delta = ch->timer >> ch->shift;
-                    if (ch->negate) ch->timer -= delta;
-                    else ch->timer += delta;
-                }
-            }
-        }
-        // noise channel length counter
-        if (!apu->noise.env_loop && apu->noise.length_counter > 0)
-            apu->noise.length_counter--;
-
-        // triangle channel length counter
-        if (!apu->triangle.counter_halt && apu->triangle.length_counter > 0)
-            apu->triangle.length_counter--;
-    }
-}
-
-void pulse_channel(PulseChannel *ch) {
-    // timer and sequencer
-    if (ch->timer_counter == 0) {
-        ch->timer_counter = ch->timer + 1;
-        ch->seq_pos = (ch->seq_pos + 1) & 0x07;
-    } else {
-        ch->timer_counter--;
-    }
-
-    // envelope (run at quarter-frame, every 7457 CPU cycles) 
-    static int envelope_divider = 0;
-    envelope_divider++;
-    if (envelope_divider >= 7457) {
-        envelope_divider = 0;
-        if (ch->envelope_start) {
-            ch->envelope_counter = 15;
-            ch->envelope_divider = ch->volume;
-            ch->envelope_start = 0;
-        } else {
-            if (ch->envelope_divider == 0) {
-                if (ch->envelope_counter > 0) {
-                    ch->envelope_counter--;
-                } else if (ch->env_loop) {
-                    ch->envelope_counter = 15;
-                }
-                ch->envelope_divider = ch->volume;
-            } else {
-                ch->envelope_divider--;
-            }
-        }
-    }
-
-    // length counter (run at half-frame, every 14913 CPU cycles)
-    static int length_divider = 0;
-    length_divider++;
-    if (length_divider >= 14913) {
-        length_divider = 0;
-        if (!ch->env_loop && ch->length_counter > 0) {
-            ch->length_counter--;
-        }
-    }
-
-    // sweep unit (run at half-frame, every 14913 CPU cycles)
-    static int sweep_divider = 0;
-    sweep_divider++;
-    if (sweep_divider >= 14913) {
-        sweep_divider = 0;
-        if (ch->sweep_reload) {
-            ch->sweep_divider = ch->period;
-            ch->sweep_reload = 0;
-        } else if (ch->sweep_divider > 0) {
-            ch->sweep_divider--;
-        } else {
-            ch->sweep_divider = ch->period;
-            if (ch->sweep_en && ch->shift > 0 && ch->timer > 7) {
-                uint16_t delta = ch->timer >> ch->shift;
-                if (ch->negate) {
-                    ch->timer -= delta;
-                } else {
-                    ch->timer += delta;
+                    if (ch->negate) {
+                        ch->timer -= delta;
+                    } else {
+                        ch->timer += delta;
+                    }
                 }
             }
         }
@@ -281,12 +213,10 @@ void pulse_channel(PulseChannel *ch) {
     }
 }
 
-void triangle_channel(TriangleChannel *ch) {
-    // Timer and sequencer
+void triangle_channel(TriangleChannel *ch, int quarter_frame, int half_frame) {
+    // timer and sequencer
     if (ch->timer_counter == 0) {
         ch->timer_counter = ch->timer + 1;
-        // Only advance the 32-step sequencer if both linear and length counters permit output.
-        // (Sequencer is clocked only when linear_counter > 0 AND length_counter > 0)
         if (ch->linear_counter > 0 && ch->length_counter > 0) {
             ch->seq_pos = (ch->seq_pos + 1) & 0x1F; // 32-step sequence
         }
@@ -294,32 +224,27 @@ void triangle_channel(TriangleChannel *ch) {
         ch->timer_counter--;
     }
 
-    // Linear counter (run at quarter-frame, every 7457 CPU cycles)
-    static int linear_divider = 0;
-    linear_divider++;
-    if (linear_divider >= 7457) {
-        linear_divider = 0;
-        // On linear-clock:
+    // length counter (run at quarter-frame)
+    if (quarter_frame) {
         if (ch->linear_reload) {
             ch->linear_counter = ch->counter_value;
         } else if (ch->linear_counter > 0) {
             ch->linear_counter--;
         }
-        // If control flag (counter_halt) is clear -> clear reload flag
-        if (!ch->counter_halt) ch->linear_reload = 0;
-    }
-
-    // Length counter (run at half-frame, every 14913 CPU cycles)
-    static int length_divider = 0;
-    length_divider++;
-    if (length_divider >= 14913) {
-        length_divider = 0;
-        if (!ch->counter_halt && ch->length_counter > 0) {
-            ch->length_counter--;
+        // clear reload flag if control flag is clear
+        if (!ch->counter_halt) {
+            ch->linear_reload = 0;
         }
     }
 
-    // Calculate output
+    // length counter (run at half-frame)
+    if (half_frame) {
+        if (!ch->counter_halt && ch->length_counter > 0) {
+            ch->length_counter = (ch->length_counter - 2 >= 0) ? ch->length_counter - 2 : 0;
+        }
+    }
+
+    // calculate output
     if (apu->triangle_en && ch->length_counter > 0 && ch->linear_counter > 0 && ch->timer > 7) {
         ch->output = triangle_sequence[ch->seq_pos] * 256; // Scale to 16-bit range
     } else {
@@ -327,8 +252,8 @@ void triangle_channel(TriangleChannel *ch) {
     }
 }
 
-void noise_channel(NoiseChannel *ch) {
-    // Timer
+void noise_channel(NoiseChannel *ch, int quarter_frame, int half_frame) {
+    // timer
     if (ch->timer_counter == 0) {
         ch->timer_counter = ch->period + 1;
 
@@ -344,40 +269,36 @@ void noise_channel(NoiseChannel *ch) {
         ch->timer_counter--;
     }
 
-    // Envelope (run at quarter-frame, every 7457 CPU cycles)
-    static int envelope_divider = 0;
-    envelope_divider++;
-    if (envelope_divider >= 7457) {
-        envelope_divider = 0;
-        if (ch->envelope_start) {
-            ch->envelope_counter = 15;
-            ch->envelope_divider = ch->volume;
-            ch->envelope_start = 0;
-        } else {
-            if (ch->envelope_divider == 0) {
-                if (ch->envelope_counter > 0) {
-                    ch->envelope_counter--;
-                } else if (ch->env_loop) {
-                    ch->envelope_counter = 15;
-                }
+    // envelope (run at quarter frame)
+    if (quarter_frame) {
+        for (int i = 0; i < 2; i++) {
+            if (ch->envelope_start) {
+                ch->envelope_counter = 15;
                 ch->envelope_divider = ch->volume;
+                ch->envelope_start = 0;
             } else {
-                ch->envelope_divider--;
+                if (ch->envelope_divider == 0) {
+                    if (ch->envelope_counter > 0) {
+                        ch->envelope_counter--;
+                    } else if (ch->env_loop) {
+                        ch->envelope_counter = 15;
+                    }
+                    ch->envelope_divider = ch->volume;
+                } else {
+                    ch->envelope_divider--;
+                }
             }
         }
     }
 
-    // Length counter (run at half-frame, every 14913 CPU cycles)
-    static int length_divider = 0;
-    length_divider++;
-    if (length_divider >= 14913) {
-        length_divider = 0;
+    // length counter (run at half-frame)
+    if (half_frame) {
         if (!ch->env_loop && ch->length_counter > 0) {
-            ch->length_counter--;
+            ch->length_counter = (ch->length_counter - 2 >= 0) ? ch->length_counter - 2 : 0;
         }
     }
 
-    // Calculate output
+    // calculate output
     int envelope = ch->constant_vol ? ch->volume : ch->envelope_counter;
     double amplitude = (envelope / 15.0) * 8000.0;
     if (apu->noise_en && ch->length_counter > 0 && (ch->lfsr & 0x0001) == 0) {
@@ -413,7 +334,7 @@ void apu_write(APU *apu, uint16_t reg, uint8_t value) {
             apu->pulse1.env_loop = (value >> 5) & 0x01;
             apu->pulse1.constant_vol = (value >> 4) & 0x01;
             apu->pulse1.volume = value & 0x0F;
-            apu->pulse1.envelope_start = 1; // envelope restart on write
+            apu->pulse1.envelope_start = 1;
             break;
         }
         case 0x4001: {
@@ -421,7 +342,7 @@ void apu_write(APU *apu, uint16_t reg, uint8_t value) {
             apu->pulse1.period = (value >> 4) & 0x07;
             apu->pulse1.negate = (value >> 3) & 0x01;
             apu->pulse1.shift = value & 0x07;
-            apu->pulse1.sweep_reload = 1; // sweep reload on write
+            apu->pulse1.sweep_reload = 1;
             break;
         }
         case 0x4002: {
@@ -473,7 +394,7 @@ void apu_write(APU *apu, uint16_t reg, uint8_t value) {
         case 0x4008: {
             apu->triangle.counter_halt = (value >> 7) & 0x01;
             apu->triangle.counter_value = value & 0x7F;
-            apu->triangle.linear_reload = 1; // Set reload flag
+            apu->triangle.linear_reload = 1; 
             break;
         }
         // 0x4009 is unused
@@ -483,10 +404,8 @@ void apu_write(APU *apu, uint16_t reg, uint8_t value) {
         }
         case 0x400B: {
             apu->triangle.timer = ((value & 0x07) << 8) | (apu->triangle.timer & 0x00FF);
-            // load length counter from length table (same as pulses)
             apu->triangle.length_counter = pulse_length[(value >> 3) & 0x1F];
             apu->triangle.seq_pos = 0;
-            // side-effect: set linear counter reload flag (actual reload handled on quarter-frame)
             apu->triangle.linear_reload = 1;
              break;
         }
@@ -506,10 +425,10 @@ void apu_write(APU *apu, uint16_t reg, uint8_t value) {
             break;
         }
         case 0x400F: {
-            apu->noise.length_counter = pulse_length[(value >> 3) & 0x1F]; // Set length counter
-            apu->noise.envelope_start = 1; // Restart envelope
-            apu->noise.lfsr = 1; // Reset LFSR
-            apu->noise.timer_counter = apu->noise.period + 1; // Reset timer
+            apu->noise.length_counter = pulse_length[(value >> 3) & 0x1F]; 
+            apu->noise.envelope_start = 1; 
+            apu->noise.lfsr = 1; 
+            apu->noise.timer_counter = apu->noise.period + 1; 
             break;
         }
 
@@ -538,7 +457,7 @@ void apu_write(APU *apu, uint16_t reg, uint8_t value) {
             apu->IRQ_inhibit = (value >> 6) & 0x01;
             if (apu->IRQ_inhibit) {
                 // clear IRQ flag
-                // TODO: Implement IRQ flag clearing logic
+                // TODO: implement IRQ flag clearing logic
             }
             break;
         }
