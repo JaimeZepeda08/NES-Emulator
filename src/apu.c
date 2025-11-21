@@ -99,8 +99,8 @@ void audio_callback(void *userdata, Uint8 *stream, int len) {
         // simple linear mix of channels (also used to control volume of each channel)
         int32_t mixed = (int32_t)apu->pulse1.output / 2
                         + (int32_t)apu->pulse2.output / 2
-                        + (int32_t)apu->triangle.output * 2
-                        + (int32_t)apu->noise.output / 2;
+                        + (int32_t)apu->triangle.output
+                        + (int32_t)apu->noise.output / 3;
 
         buffer[i] = (int16_t)mixed;
     }
