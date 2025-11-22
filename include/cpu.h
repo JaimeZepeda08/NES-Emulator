@@ -7,6 +7,9 @@
 typedef struct MEM MEM;
 typedef struct PPU PPU;
 
+// NES STACK starts at 0x01FF and grows down to 0x0100
+#define STACK_BASE 0x0100
+
 // CPU status register (P) flags
 #define FLAG_CARRY          0x01 // Bit 1 (C)
 #define FLAG_ZERO           0x02 // Bit 2 (Z)
@@ -29,11 +32,12 @@ typedef struct CPU {
     int service_int;    // if 1, then an interrupt is being serviced
 } CPU;
 
-CPU *cpu_init(MEM *memory);
+CPU *cpu_init();
 void cpu_free(CPU *cpu);
-void cpu_run_cycle(CPU *cpu, MEM *memory, PPU *ppu);
-void cpu_irq(CPU *cpu, MEM *memory, PPU *ppu);
-void cpu_nmi(CPU *cpu, MEM *memory, PPU *ppu);
-void cpu_dump_registers(CPU *cpu);
+void cpu_run_cycle(CPU *cpu);
+void cpu_irq(CPU *cpu);
+void cpu_nmi(CPU *cpu);
+void stack_push(CPU *cpu, uint8_t value);
+uint8_t stack_pop(CPU *cpu);
 
 #endif

@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include "../include/nes.h"
 #include "../include/display.h"
 #include "../include/log.h"
 #include "../include/ppu.h"
@@ -36,13 +37,13 @@ SDL_Window *window_init(int pt_enable) {
     return window;
 }
 
-void render_display(SDL_Renderer *renderer, PPU *ppu, CPU *cpu, SDL_Texture *game_texture, TTF_Font *font, int pt_enable) {
+void render_display(SDL_Renderer *renderer, SDL_Texture *game_texture, TTF_Font *font, int pt_enable) {
     // clear the screen once before rendering
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
     SDL_RenderClear(renderer);
 
     // ======================= Game Window =======================
-    SDL_UpdateTexture(game_texture, NULL, ppu->frame_buffer, NES_WIDTH * sizeof(uint32_t)); 
+    SDL_UpdateTexture(game_texture, NULL, nes->ppu->frame_buffer, NES_WIDTH * sizeof(uint32_t)); 
     SDL_Rect game_rect = {0, 0, GAME_WIDTH, GAME_HEIGHT + 2};
     SDL_RenderCopy(renderer, game_texture, NULL, &game_rect);  
     // ======================= Game Window =======================
@@ -70,8 +71,8 @@ void render_display(SDL_Renderer *renderer, PPU *ppu, CPU *cpu, SDL_Texture *gam
 
                 uint16_t addr = base + tile_index * 16;
                 for (int row = 0; row < 8; row++) {
-                    uint8_t plane0 = ppu->vram[addr + row];
-                    uint8_t plane1 = ppu->vram[addr + row + 8];
+                    uint8_t plane0 = nes_ppu_read(addr + row);
+                    uint8_t plane1 = nes_ppu_read(addr + row + 8);
 
                     for (int col = 0; col < 8; col++) {
                         uint8_t bit0 = (plane0 >> (7 - col)) & 1;
@@ -115,18 +116,18 @@ void render_display(SDL_Renderer *renderer, PPU *ppu, CPU *cpu, SDL_Texture *gam
              "PC: $%04X   A: $%02X   X: $%02X   Y: $%02X   SP: $%02X   P: %c%c-%c%c%c%c%c%c    FPS: %02i\n"
              "PPUCTRL: $%02X   PPUMASK: $%02X   PPUSTATUS: $%02X   OAMADDR: $%02X\n"
              "OAMDATA: $%02X   PPUSCROLL: $%02X   PPUADDR: $%02X   PPUDATA: $%02X",
-             cpu->PC, cpu->A, cpu->X, cpu->Y, cpu->S,
-             (cpu->P & FLAG_NEGATIVE) ? 'N' : 'n',
-             (cpu->P & FLAG_OVERFLOW) ? 'V' : 'v',
-             (cpu->P & FLAG_UNUSED) ? 'U' : 'u',
-             (cpu->P & FLAG_BREAK) ? 'B' : 'b',
-             (cpu->P & FLAG_DECIMAL) ? 'D' : 'd',
-             (cpu->P & FLAG_INT) ? 'I' : 'i',
-             (cpu->P & FLAG_ZERO) ? 'Z' : 'z',
-             (cpu->P & FLAG_CARRY) ? 'C' : 'c',
-             ppu->FPS,
-             ppu->PPUCTRL, ppu->PPUMASK, ppu->PPUSTATUS, ppu->OAMADDR,
-             ppu->OAMDATA, ppu->PPUSCROLL, ppu->PPUADDR, ppu->PPUDATA);
+             nes->cpu->PC, nes->cpu->A, nes->cpu->X, nes->cpu->Y, nes->cpu->S,
+             (nes->cpu->P & FLAG_NEGATIVE) ? 'N' : 'n',
+             (nes->cpu->P & FLAG_OVERFLOW) ? 'V' : 'v',
+             (nes->cpu->P & FLAG_UNUSED) ? 'U' : 'u',
+             (nes->cpu->P & FLAG_BREAK) ? 'B' : 'b',
+             (nes->cpu->P & FLAG_DECIMAL) ? 'D' : 'd',
+             (nes->cpu->P & FLAG_INT) ? 'I' : 'i',
+             (nes->cpu->P & FLAG_ZERO) ? 'Z' : 'z',
+             (nes->cpu->P & FLAG_CARRY) ? 'C' : 'c',
+             nes->ppu->FPS,
+             nes->ppu->PPUCTRL, nes->ppu->PPUMASK, nes->ppu->PPUSTATUS, nes->ppu->OAMADDR,
+             nes->ppu->OAMDATA, nes->ppu->PPUSCROLL, nes->ppu->PPUADDR, nes->ppu->PPUDATA);
 
     // render each line of debug info
     char *line = strtok(reg_text, "\n");

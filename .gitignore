@@ -1,8 +1,6 @@
-.vscode/
-cpu_memory.txt
-ppu_memory.txt
-compare_logs.py
-roms/
 .DS_Store
+.vscode/
+roms/
+build/
 *.o
 nes-emulator

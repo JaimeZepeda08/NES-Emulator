@@ -105,9 +105,7 @@ typedef struct APU {
 APU *apu_init();
 void apu_free(APU *apu);
 void apu_run_cycle(APU *apu);
-uint8_t apu_read(APU *apu, uint16_t reg);
-void apu_write(APU *apu, uint16_t reg, uint8_t value);
-
-extern APU *apu;
+uint8_t apu_register_read(APU *apu, uint16_t reg);
+void apu_register_write(APU *apu, uint16_t reg, uint8_t value);
 
 #endif

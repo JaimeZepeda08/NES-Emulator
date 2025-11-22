@@ -7,26 +7,6 @@
 #define NES_WIDTH           256
 #define NES_HEIGHT          240
 
-////////////////////////////////////////////////////
-//                PPU MEMORY MAP                  //
-//================================================//
-// 0x0000-0x0FFF    |   Pattern Table 0           //
-// 0x1000-0x1FFF    |   Pattern Table 1           //
-//================================================//
-// 0x2000-0x23FF    |   Nametable 0               //
-// 0x2400-0x27FF    |   Nametable 1               //
-// 0x2800-0x2BFF    |   Nametable 2               //
-// 0x2C00-0x2FFF    |   Nametable 3               //
-// 0x3000-0x3EFF    |   Mirror of 0x2000-0x2FFF   //
-//================================================//
-// 0x3F00-0x3F1F    |   Pallete Ram               //
-// 0x3F20-0x3FFF    |   Mirror of 0x3F00-0x3F1F   //
-////////////////////////////////////////////////////
-
-// NES uses 8KB of physical VRAM, but PPU can address up to 16KB
-// Some areas are mirrored
-#define VRAM_SIZE           0x4000 
-
 // Size of Object Attribute Memory (OAM) for sprites
 // Each sprite takes 4 bytes, total 64 sprites, 256 bytes
 // Byte 0: Y position
@@ -34,9 +14,7 @@
 // Byte 2: Attributes (palette, priority, flip)
 // Byte 3: X position
 #define OAM_SIZE            256
-
-#define MIRROR_VERTICAL     0
-#define MIRROR_HORIZONTAL   1
+#define PALETTE_SIZE        32
 
 // ====================== Memory-Mapped Registers ======================
 
@@ -81,8 +59,8 @@
 extern SDL_Color nes_palette[64];
 
 typedef struct PPU {
-    uint8_t vram[VRAM_SIZE]; // 16KB VRAM
     uint8_t oam[OAM_SIZE]; // Object Attribute Memory (OAM) for sprites
+    uint8_t palette_ram[PALETTE_SIZE]; // Palette RAM
 
     // Memory-Mapped Registers
     uint8_t PPUCTRL;
@@ -124,9 +102,12 @@ typedef struct PPU {
 
     int cycle;      // [0, 340]
     int scanline;   // [-1, 260], where -1 is the pre-render line, 0–239 are visible, 240 is post-render, 241–260 is VBlank
-    int mirroring;  // Nametable mirroring mode
 
     uint32_t frame_buffer[NES_WIDTH * NES_HEIGHT]; // PPU writes to framebuffer and display renders to screen
+
+    int oam_dma_transfer; // flag to indicate OAM DMA transfer in progress
+    uint8_t oam_dma_page; // high byte of source address for OAM DMA
+    int oam_dma_cycle; // cycle counter for OAM DMA transfer (1-256 for entire page)
 
     int frames; // keeps track of total frames to calculate FPS
     int FPS;
@@ -135,9 +116,8 @@ typedef struct PPU {
 PPU *ppu_init();
 void ppu_free(PPU *ppu);
 int ppu_run_cycle(PPU *ppu);
-uint8_t ppu_read(PPU *ppu, uint16_t reg);
-void ppu_write(PPU *ppu, uint16_t reg, uint8_t value);
-void ppu_dump_registers(PPU *ppu);
-void ppu_memory_dump(FILE *output, PPU *ppu);
+uint8_t ppu_register_read(PPU *ppu, uint16_t reg);
+void ppu_register_write(PPU *ppu, uint16_t reg, uint8_t value);
+void ppu_oam_dma_transfer(PPU *ppu);
 
 #endif

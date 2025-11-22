@@ -22,4 +22,4 @@
 
 
 SDL_Window *window_init(int pt_enable);
-void render_display(SDL_Renderer *renderer, PPU *ppu, CPU *cpu, SDL_Texture *game_texture, TTF_Font *font, int pt_enable);
+void render_display(SDL_Renderer *renderer, SDL_Texture *game_texture, TTF_Font *font, int pt_enable);

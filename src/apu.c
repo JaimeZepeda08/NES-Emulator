@@ -1,7 +1,7 @@
 #include <SDL.h>
 #include <stdint.h>
+#include "../include/nes.h"
 #include "../include/apu.h"
-#include "../include/memory.h"
 
 void audio_callback(void *userdata, Uint8 *stream, int len);
 void pulse_channel(PulseChannel *ch, int quarter_frame, int half_frame);
@@ -206,7 +206,7 @@ void pulse_channel(PulseChannel *ch, int quarter_frame, int half_frame) {
     int seq = ch->seq_pos & 0x07;
     int envelope = ch->constant_vol ? ch->volume : ch->envelope_counter;
     double amplitude = (envelope / 15.0) * 8000.0;
-    if (apu->pulse1_en && ch->length_counter > 0 && ch->timer > 7) {
+    if (nes->apu->pulse1_en && ch->length_counter > 0 && ch->timer > 7) {
         ch->output = duty_patterns[duty][seq] ? amplitude : -amplitude;
     } else {
         ch->output = 0;
@@ -245,7 +245,7 @@ void triangle_channel(TriangleChannel *ch, int quarter_frame, int half_frame) {
     }
 
     // calculate output
-    if (apu->triangle_en && ch->length_counter > 0 && ch->linear_counter > 0 && ch->timer > 7) {
+    if (nes->apu->triangle_en && ch->length_counter > 0 && ch->linear_counter > 0 && ch->timer > 7) {
         ch->output = triangle_sequence[ch->seq_pos] * 256; // Scale to 16-bit range
     } else {
         ch->output = 0;
@@ -301,14 +301,14 @@ void noise_channel(NoiseChannel *ch, int quarter_frame, int half_frame) {
     // calculate output
     int envelope = ch->constant_vol ? ch->volume : ch->envelope_counter;
     double amplitude = (envelope / 15.0) * 8000.0;
-    if (apu->noise_en && ch->length_counter > 0 && (ch->lfsr & 0x0001) == 0) {
+    if (nes->apu->noise_en && ch->length_counter > 0 && (ch->lfsr & 0x0001) == 0) {
         ch->output = amplitude;
     } else {
         ch->output = 0;
     }   
 }
 
-uint8_t apu_read(APU *apu, uint16_t reg) {
+uint8_t apu_register_read(APU *apu, uint16_t reg) {
     switch (reg) {
         // 0x4015 is the only readable APU register
         case 0x4015: {
@@ -325,7 +325,7 @@ uint8_t apu_read(APU *apu, uint16_t reg) {
     }
 }
 
-void apu_write(APU *apu, uint16_t reg, uint8_t value) {
+void apu_register_write(APU *apu, uint16_t reg, uint8_t value) {
     switch (reg) {
         // ======= PULSE 1 =======
 

@@ -1,15 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../include/nes.h"
 #include "../include/ppu.h"
 #include "../include/log.h"
-#include "../include/memory.h"
 #include "../include/cpu.h"
 
 uint32_t calculate_pixel_color(PPU *ppu, int x, int y);
 uint32_t get_background_pixel(PPU *ppu, int *bg_transparent);
 uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite_hit, int bg_transparent);
-uint16_t mirror_nametable(PPU *ppu, uint16_t address);
 
 struct PPU *ppu_init() {
     printf("Initializing PPU...");
@@ -21,8 +20,8 @@ struct PPU *ppu_init() {
     }
 
     // Initialize PPU memory 
-    memset(ppu->vram, 0, VRAM_SIZE);
     memset(ppu->oam, 0, OAM_SIZE);
+    memset(ppu->palette_ram, 0, PALETTE_SIZE);
     memset(ppu->frame_buffer, 0, NES_WIDTH * NES_HEIGHT);
 
     // Set up register
@@ -52,6 +51,10 @@ struct PPU *ppu_init() {
     ppu->data_buffer = 0;
 
     ppu->nmi = 0;
+
+    ppu->oam_dma_transfer = 0; 
+    ppu->oam_dma_page = 0x00; 
+    ppu->oam_dma_cycle = 0; 
 
     // initialize frame counter
     ppu->frames = 0;
@@ -110,15 +113,13 @@ int ppu_run_cycle(PPU *ppu) {
 
                     // fetch next tile id
                     uint16_t v_addr = 0x2000 | (ppu->v & 0x0FFF);
-                    uint16_t mirrored_addr = mirror_nametable(ppu, v_addr);
-                    ppu->bg_next_tile_id = ppu->vram[mirrored_addr];
+                    ppu->bg_next_tile_id = nes_ppu_read(v_addr);
                     break; 
                 }
                 case 2: {
                     // fetch attribute byte
                     uint16_t v_addr = 0x23C0 | (ppu->v & 0x0C00) | ((ppu->v >> 4) & 0x38) | ((ppu->v >> 2) & 0x07);
-                    uint16_t mirrored_addr = mirror_nametable(ppu, v_addr);
-                    uint8_t attribute_byte = ppu->vram[mirrored_addr];
+                    uint8_t attribute_byte = nes_ppu_read(v_addr);
 
                     // extract palette bits based on coarse X and Y
                     uint8_t shift = ((ppu->v >> 4) & 4) | (ppu->v & 2);
@@ -130,7 +131,7 @@ int ppu_run_cycle(PPU *ppu) {
                     uint16_t fine_y = (ppu->v >> 12) & 0x7;
                     uint16_t base_table_addr = (ppu->PPUCTRL & PPUCNTRL_B) ? 0x1000 : 0x0000;
                     uint16_t tile_addr = base_table_addr + (ppu->bg_next_tile_id * 16) + fine_y;
-                    ppu->bg_next_tile_lsb = ppu->vram[tile_addr];
+                    ppu->bg_next_tile_lsb = nes_ppu_read(tile_addr);
                     break;
                 }
                 case 6: {
@@ -138,7 +139,7 @@ int ppu_run_cycle(PPU *ppu) {
                     uint16_t fine_y = (ppu->v >> 12) & 0x7;
                     uint16_t base_table_addr = (ppu->PPUCTRL & PPUCNTRL_B) ? 0x1000 : 0x0000;
                     uint16_t tile_addr = base_table_addr + (ppu->bg_next_tile_id * 16) + fine_y + 8;
-                    ppu->bg_next_tile_msb = ppu->vram[tile_addr];
+                    ppu->bg_next_tile_msb = nes_ppu_read(tile_addr);
                     break;
                 }
                 case 7: {
@@ -191,8 +192,7 @@ int ppu_run_cycle(PPU *ppu) {
         if (ppu->cycle == 338 || ppu->cycle == 340) {
             // fetch next tile id (odd frame skip)
             uint16_t v_addr = 0x2000 | (ppu->v & 0x0FFF);
-            uint16_t mirrored_addr = mirror_nametable(ppu, v_addr);
-            ppu->bg_next_tile_id = ppu->vram[mirrored_addr];
+            ppu->bg_next_tile_id = nes_ppu_read(v_addr);
         }
 
         if (ppu->scanline == -1 && ppu->cycle >= 280 && ppu->cycle < 305)
@@ -281,9 +281,9 @@ uint32_t get_background_pixel(PPU *ppu, int *bg_transparent) {
     // get final color from palette
     uint8_t color_id = 0;
     if (bg_pixel != 0) {
-        color_id = ppu->vram[PALETTE_BASE + (bg_palette << 2) + bg_pixel] & 0x3F;
+        color_id = ppu->palette_ram[(bg_palette << 2) + bg_pixel] & 0x3F;
     } else {
-        color_id = ppu->vram[PALETTE_BASE]; // background color
+        color_id = ppu->palette_ram[0]; // background color
         *bg_transparent = 1;
     }
 
@@ -337,8 +337,8 @@ uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite
         }
 
         // get the two bitplanes for the pixel
-        uint8_t plane0 = ppu->vram[(tile_addr + sy) & 0x1FFF];
-        uint8_t plane1 = ppu->vram[(tile_addr + sy + 8) & 0x1FFF];
+        uint8_t plane0 = nes_ppu_read((tile_addr + sy) & 0x1FFF);
+        uint8_t plane1 = nes_ppu_read((tile_addr + sy + 8) & 0x1FFF);
 
         // extract pixel color
         int bit = 7 - sx;
@@ -353,8 +353,8 @@ uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite
 
         // get palette color
         uint8_t palette_index = 0x10 + ((attr & 0x03) << 2) + color_id;
-        uint16_t palette_addr = PALETTE_BASE + (palette_index & 0x1F);
-        SDL_Color color = nes_palette[ppu->vram[palette_addr] & 0x3F];
+        uint16_t palette_addr = palette_index & 0x1F;
+        SDL_Color color = nes_palette[ppu->palette_ram[palette_addr] & 0x3F];
 
         // apply grayscale if needed
         if (ppu->PPUMASK & PPUMASK_Gr) {
@@ -383,25 +383,7 @@ uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite
     return sprite_color;
 }
 
-uint16_t mirror_nametable(PPU *ppu, uint16_t address) {
-    switch (ppu->mirroring) {
-        case MIRROR_VERTICAL:
-            if (address >= 0x2800 && address < 0x2C00)
-                return address - 0x800;
-            if (address >= 0x2C00 && address < 0x3000)
-                return address - 0x800;
-            break;
-        case MIRROR_HORIZONTAL:
-            if (address >= 0x2400 && address < 0x2800)
-                return address - 0x400;
-            if (address >= 0x2C00 && address < 0x3000)
-                return address - 0x800;
-            break;
-    }
-    return address;
-}
-
-uint8_t ppu_read(PPU *ppu, uint16_t reg) {
+uint8_t ppu_register_read(PPU *ppu, uint16_t reg) {
     DEBUG_MSG_PPU("Reading register 0x%04X", reg);
     switch (reg) {
         // Write
@@ -454,17 +436,15 @@ uint8_t ppu_read(PPU *ppu, uint16_t reg) {
         case PPUDATA_REG: {
             // palette data can be read without buffering
             if (ppu->v >= PALETTE_BASE) {
-                uint16_t mirrored_addr = PALETTE_BASE | (ppu->v & 0x1F);
-                if ((mirrored_addr & 0x13) == 0x10) mirrored_addr &= ~0x10;
-                ppu->PPUDATA = ppu->vram[mirrored_addr];
-
-                // perform buffered read for next read
-                uint16_t buffered_addr = ppu->v & 0x2FFF;
-                ppu->data_buffer = ppu->vram[buffered_addr];
+                uint8_t mirrored_addr = ppu->v & 0x1F;
+                if ((mirrored_addr & 0x13) == 0x10) {
+                    mirrored_addr &= ~0x10;
+                }
+                ppu->PPUDATA = ppu->palette_ram[mirrored_addr];
             } else { // Normal VRAM read
                 // buffer data reads for one extra cycle
                 ppu->PPUDATA = ppu->data_buffer;
-                ppu->data_buffer = ppu->vram[ppu->v & 0x3FFF];
+                ppu->data_buffer = nes_ppu_read(ppu->v);
             }
 
             // Increase address after read
@@ -482,7 +462,7 @@ uint8_t ppu_read(PPU *ppu, uint16_t reg) {
     }
 }
 
-void ppu_write(PPU *ppu, uint16_t reg, uint8_t value) {
+void ppu_register_write(PPU *ppu, uint16_t reg, uint8_t value) {
     DEBUG_MSG_PPU("Writing 0x%02X to register 0x%04X", value, reg);
     switch (reg) {
         // Write 
@@ -571,10 +551,10 @@ void ppu_write(PPU *ppu, uint16_t reg, uint8_t value) {
             if (ppu->v >= PALETTE_BASE) {
                 uint16_t palette_offset = ppu->v & 0x1F;
                 if ((palette_offset & 0x13) == 0x10) palette_offset &= ~0x10;
-                uint16_t palette_addr = PALETTE_BASE | palette_offset;
-                ppu->vram[palette_addr] = value;
+                uint16_t palette_addr = palette_offset;
+                ppu->palette_ram[palette_addr] = value;
             } else { // Write to VRAM
-                ppu->vram[ppu->v & 0x3FFF] = value;
+                nes_ppu_write(ppu->v, value);
             }
 
             // Auto increment address after write based on PPUCTRL setting
@@ -591,41 +571,10 @@ void ppu_write(PPU *ppu, uint16_t reg, uint8_t value) {
     }
 }
 
-void ppu_dump_registers(PPU *ppu) {
-    DEBUG_MSG_PPU("CTRL: %02X  MASK: %02X  STATUS: %02X  OAMADDR: %02X  OAMDATA: %02X  SCROLL: %02X  PPUADDR: %02X  PPUDATA: %02X",
-            ppu->PPUCTRL, ppu->PPUMASK, ppu->PPUSTATUS, ppu->OAMADDR, ppu->OAMDATA, ppu->PPUSCROLL, ppu->PPUADDR, ppu->PPUDATA);
-}
-
-void ppu_memory_dump(FILE *output, PPU *ppu) {
-    if (!ppu || !output) {
-        fprintf(stderr, "[ERROR] [Memory] Invalid memory or output stream!\n");
-        return;
-    }
-
-    for (size_t i = 0; i < VRAM_SIZE; i += 16) {
-        fprintf(output, "%04lX: ", i);  // Print memory address (offset)
-        
-        // Print hex bytes
-        for (size_t j = 0; j < 16; j++) {
-            if (i + j < VRAM_SIZE) {
-                fprintf(output, "%02X ", ppu->vram[i + j]); // Print hex value
-            } else {
-                fprintf(output, "   ");  // Padding for alignment
-            }
-        }
-
-        fprintf(output, " | "); // Separator
-
-        // Print ASCII representation
-        for (size_t j = 0; j < 16; j++) {
-            if (i + j < VRAM_SIZE) {
-                uint8_t byte = ppu->vram[i + j];
-                fprintf(output, "%c", (byte >= 32 && byte <= 126) ? byte : '.'); // Printable ASCII or '.'
-            }
-        }
-        
-        fprintf(output, " |\n"); // End of line
-    }
+void ppu_oam_dma_transfer(PPU *ppu) {
+    uint16_t address = ppu->oam_dma_page << 8;
+    uint8_t byte = nes_cpu_read(address | (uint16_t)ppu->oam_dma_cycle);
+    ppu->oam[(ppu->OAMADDR + ppu->oam_dma_cycle) % 256] = byte;
 }
 
 SDL_Color nes_palette[64] = {
