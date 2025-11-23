@@ -70,7 +70,6 @@ typedef struct NES {
     uint8_t vram[VRAM_SIZE];    // 2KB PPU VRAM 
 } NES;
 
-
 void nes_init(char *filename);
 void nes_free();
 int nes_cycle(uint32_t *last_time, SDL_Renderer *renderer, SDL_Texture *game_texture, TTF_Font *font, int pt_enable);

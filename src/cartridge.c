@@ -62,7 +62,10 @@ void load_rom(Cartridge *cart, const char *filename) {
 
     // Read iNES header (16 bytes)
     uint8_t header[16];
-    fread(header, 1, 16, rom);
+    if (fread(header, 1, 16, rom) != 16) {
+        fclose(rom);
+        FATAL_ERROR("ROM Loader", "Failed to read ROM header");
+    }
 
     // Validate NES file signature ("NES" followed by 0x1A)
     if (!(header[0] == 'N' && header[1] == 'E' && header[2] == 'S' && header[3] == 0x1A)) {
@@ -74,17 +77,17 @@ void load_rom(Cartridge *cart, const char *filename) {
     cart->prg_size = header[4] * 16384;  // PRG ROM (16KB units)
     cart->chr_size = header[5] * 8192;   // CHR ROM (8KB units)
 
+    // Validate sizes
+    if (cart->prg_size == 0) {
+        fclose(rom);
+        FATAL_ERROR("ROM Loader", "Invalid PRG ROM size");
+    }
+
     uint8_t flag6 = header[6];
     uint8_t mapper_low = (flag6 >> 4);
     uint8_t flag7 = header[7];
     uint8_t mapper_high = (flag7 & 0xF0);
     cart->mapper_id = mapper_low | mapper_high;
-
-    // Check mapper — for now only NROM (mapper 0) is supported
-    if (cart->mapper_id != 0) {
-        fclose(rom);
-        FATAL_ERROR("ROM Loader", "Unsupported mapper: %d", cart->mapper_id);
-    }
 
     // Set mirroring and battery flags
     cart->mirroring = (flag6 & 0x01) ? MIRROR_VERTICAL : MIRROR_HORIZONTAL;
@@ -103,7 +106,11 @@ void load_rom(Cartridge *cart, const char *filename) {
     }
 
     // Load PRG ROM
-    fread(cart->prg_rom, 1, cart->prg_size, rom);
+    if (fread(cart->prg_rom, 1, cart->prg_size, rom) != (size_t)cart->prg_size) {
+        free(cart->prg_rom);
+        fclose(rom);
+        FATAL_ERROR("ROM Loader", "Failed to read PRG ROM data");
+    }
 
     // Allocate and load CHR ROM or CHR RAM
     if (cart->chr_size > 0) {
@@ -113,7 +120,12 @@ void load_rom(Cartridge *cart, const char *filename) {
             free(cart->prg_rom);
             FATAL_ERROR("ROM Loader", "Failed to allocate CHR ROM memory");
         }
-        fread(cart->chr_rom, 1, cart->chr_size, rom);
+        if (fread(cart->chr_rom, 1, cart->chr_size, rom) != (size_t)cart->chr_size) {
+            free(cart->chr_rom);
+            free(cart->prg_rom);
+            fclose(rom);
+            FATAL_ERROR("ROM Loader", "Failed to read CHR ROM data");
+        }
     } else {
         // CHR RAM — allocate 8KB
         cart->chr_size = 8192;

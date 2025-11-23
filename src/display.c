@@ -38,6 +38,11 @@ SDL_Window *window_init(int pt_enable) {
 }
 
 void render_display(SDL_Renderer *renderer, SDL_Texture *game_texture, TTF_Font *font, int pt_enable) {
+    // Safety check: ensure NES is initialized
+    if (!nes || !nes->ppu || !nes->cpu || !nes->mapper) {
+        return;
+    }
+
     // clear the screen once before rendering
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
     SDL_RenderClear(renderer);
@@ -56,46 +61,56 @@ void render_display(SDL_Renderer *renderer, SDL_Texture *game_texture, TTF_Font 
 
     // ======================= Pattern Tables =======================
     static SDL_Texture *pt_texture = NULL;
+    
+    // create texture if it doesn't exist
     if (!pt_texture) {
         pt_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, PT_WIDTH, PT_HEIGHT);
-        SDL_SetRenderTarget(renderer, pt_texture);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
+        if (!pt_texture) {
+            SDL_RenderPresent(renderer);
+            return;
+        }
+    }
 
-        for (int table = 0; table < 2; table++) {
-            uint16_t base = table * 0x1000;
+    // re-render the pattern table every frame 
+    SDL_SetRenderTarget(renderer, pt_texture);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
 
-            for (int tile_index = 0; tile_index < NES_WIDTH; tile_index++) {
-                int tx = tile_index % 16;
-                int ty = tile_index / 16;
+    for (int table = 0; table < 2; table++) {
+        uint16_t base = table * 0x1000;
 
-                uint16_t addr = base + tile_index * 16;
-                for (int row = 0; row < 8; row++) {
-                    uint8_t plane0 = nes_ppu_read(addr + row);
-                    uint8_t plane1 = nes_ppu_read(addr + row + 8);
+        for (int tile_index = 0; tile_index < 256; tile_index++) {
+            int tx = tile_index % 16;
+            int ty = tile_index / 16;
 
-                    for (int col = 0; col < 8; col++) {
-                        uint8_t bit0 = (plane0 >> (7 - col)) & 1;
-                        uint8_t bit1 = (plane1 >> (7 - col)) & 1;
-                        uint8_t pixel = (bit1 << 1) | bit0;
+            uint16_t addr = base + tile_index * 16;
+            for (int row = 0; row < 8; row++) {
+                uint8_t plane0 = nes->mapper->ppu_read(nes->mapper, (addr + row) & 0x1FFF);
+                uint8_t plane1 = nes->mapper->ppu_read(nes->mapper, (addr + row + 8) & 0x1FFF);
 
-                        uint8_t shade = 85 * pixel;
-                        SDL_SetRenderDrawColor(renderer, shade, shade, shade, 255);
+                for (int col = 0; col < 8; col++) {
+                    uint8_t bit0 = (plane0 >> (7 - col)) & 1;
+                    uint8_t bit1 = (plane1 >> (7 - col)) & 1;
+                    uint8_t pixel = (bit1 << 1) | bit0;
 
-                        SDL_Rect pixel_rect = {
-                            .x = (tx * 8 + col),
-                            .y = ((ty + table * 16) * 8 + row),
-                            .w = 1,
-                            .h = 1
-                        };
-                        SDL_RenderFillRect(renderer, &pixel_rect);
-                    }
+                    uint8_t shade = 85 * pixel;
+                    SDL_SetRenderDrawColor(renderer, shade, shade, shade, 255);
+
+                    SDL_Rect pixel_rect = {
+                        .x = (tx * 8 + col),
+                        .y = ((ty + table * 16) * 8 + row),
+                        .w = 1,
+                        .h = 1
+                    };
+                    SDL_RenderFillRect(renderer, &pixel_rect);
                 }
             }
         }
-
-        SDL_SetRenderTarget(renderer, NULL);
     }
+
+    SDL_SetRenderTarget(renderer, NULL);
+
+    // Copy pattern table to screen
     SDL_Rect pt_dest = {
         .x = GAME_WIDTH,
         .y = 0,
@@ -133,6 +148,7 @@ void render_display(SDL_Renderer *renderer, SDL_Texture *game_texture, TTF_Font 
     char *line = strtok(reg_text, "\n");
     if (!font) {
         fprintf(stderr, "Font not loaded!\n");
+        SDL_RenderPresent(renderer);
         return;
     }
     SDL_Color white = {255, 255, 255, 255};

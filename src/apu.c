@@ -441,10 +441,6 @@ void apu_register_write(APU *apu, uint16_t reg, uint8_t value) {
             apu->noise_en = (value >> 3) & 0x01;
             apu->DMC_en = (value >> 4) & 0x01;
 
-            if (apu->DMC_en) {
-                printf("DMC channel not implemented yet\n");
-            }
-
             // clear length counters if channels are disabled
             if (!apu->pulse1_en) apu->pulse1.length_counter = 0;
             if (!apu->pulse2_en) apu->pulse2.length_counter = 0;
