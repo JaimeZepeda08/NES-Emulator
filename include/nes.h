@@ -62,7 +62,8 @@ typedef struct NES {
     CPU *cpu;
     PPU *ppu;
     APU *apu;
-    CNTRL *controller;
+    CNTRL *controller1;
+    CNTRL *controller2;
 
     Mapper *mapper; 
 

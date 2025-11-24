@@ -29,8 +29,9 @@ void nes_init(char *filename) {
     // initialize APU
     nes->apu = apu_init();
 
-    // initialize Controller
-    nes->controller = cntrl_init();
+    // initialize controllers
+    nes->controller1 = cntrl_init();
+    nes->controller2 = cntrl_init();
 }
 
 void nes_free() {
@@ -44,8 +45,11 @@ void nes_free() {
         if (nes->apu) {
             apu_free(nes->apu);
         }
-        if (nes->controller) {
-            cntrl_free(nes->controller);
+        if (nes->controller1) {
+            cntrl_free(nes->controller1);
+        }
+        if (nes->controller2) {
+            cntrl_free(nes->controller2);
         }
         if (nes->mapper && nes->mapper->cart) {
             cart_free(nes->mapper->cart);
@@ -113,15 +117,22 @@ uint8_t nes_cpu_read(uint16_t address) {
             // ppu register read
             return ppu_register_read(nes->ppu, reg_addr);
         } 
-        // APU registers
-        else if ((address >= 0x4000 && address <= 0x4013) || (address == 0x4015) || (address == 0x4017)) {
+        // APU registers and IO
+        else if (address >= 0x4015 && address <= 0x4017) {
             // apu register read
-            return apu_register_read(nes->apu, address);
-        } 
-        // controller ports
-        else if (address == 0x4016) {  // not using 2nd controller
-            // controller read
-            return cntrl_read(nes->controller);
+            if (address == 0x4015) { // only readable APU register
+                return apu_register_read(nes->apu, address);
+            }
+            // controller 1
+            else if (address == 0x4016) {  
+                return cntrl_read(nes->controller1);
+            } 
+            // controller 2
+            else if (address == 0x4017) {
+                return cntrl_read(nes->controller2);
+            } 
+
+            return 0; // other APU registers are write-only
         } 
     } 
     // cartridge space (mapped by the mapper)
@@ -153,10 +164,21 @@ void nes_cpu_write(uint16_t address, uint8_t value) {
             ppu_register_write(nes->ppu, reg_addr, value);
             return;
         } 
-        // APU registers
-        else if ((address >= 0x4000 && address <= 0x4013) || (address == 0x4015) || (address == 0x4017)) {
+        // APU and IO registers
+        else if ((address >= 0x4000 && address <= 0x4013) || (address >= 0x4015 && address <= 0x4017)) {
             // apu register write
             apu_register_write(nes->apu, address, value);
+            // controller 1
+            if (address == 0x4016) {  
+                // controller write
+                cntrl_write(nes->controller1, value);
+                return;
+            } 
+            // controller 2
+            else if (address == 0x4017) {
+                cntrl_write(nes->controller2, value);
+                return;
+            }
             return;
         } 
         else if (address == 0x4014) {
@@ -166,12 +188,6 @@ void nes_cpu_write(uint16_t address, uint8_t value) {
             nes->ppu->oam_dma_cycle = 0;
             return;
         }
-        // controller ports
-        else if (address == 0x4016) {  // not using 2nd controller
-            // controller write
-            cntrl_write(nes->controller, value);
-            return;
-        } 
     } 
     // cartridge space (mapped by the mapper)
     else if (address >= 0x6000 && address <= CPU_MEMORY_SIZE) {

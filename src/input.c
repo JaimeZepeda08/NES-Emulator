@@ -24,7 +24,7 @@ void cntrl_free(CNTRL *cntrl) {
     free(cntrl);
 }
 
-void cntrl_handle_input(CNTRL *cntrl, SDL_Event *event) {
+void cntrl1_handle_input(CNTRL *cntrl, SDL_Event *event) {
     if (event->type == SDL_KEYDOWN || event->type == SDL_KEYUP) {
         uint8_t mask = 0;
 
@@ -51,6 +51,50 @@ void cntrl_handle_input(CNTRL *cntrl, SDL_Event *event) {
                 mask = NES_BUTTON_LEFT; 
                 break;
             case SDLK_RIGHT: 
+                mask = NES_BUTTON_RIGHT; 
+                break;
+            default:
+                return; // Ignore other keys
+        }
+
+        if (event->type == SDL_KEYDOWN) {
+            if (!(cntrl->button_state & mask)) {
+                DEBUG_MSG_CNTRL("Key [%s] pressed", SDL_GetKeyName(event->key.keysym.sym));
+                cntrl->button_state |= mask;  // Set bit (button pressed)
+            }
+        } else {
+            cntrl->button_state &= ~mask; // Clear bit (button released)
+        }
+    }
+}
+
+void cntrl2_handle_input(CNTRL *cntrl, SDL_Event *event) {
+    if (event->type == SDL_KEYDOWN || event->type == SDL_KEYUP) {
+        uint8_t mask = 0;
+
+        switch (event->key.keysym.sym) {
+            case SDLK_l: 
+                mask = NES_BUTTON_A; 
+                break;
+            case SDLK_k: 
+                mask = NES_BUTTON_B; 
+                break;
+            case SDLK_h: 
+                mask = NES_BUTTON_START; 
+                break;
+            case SDLK_g: 
+                mask = NES_BUTTON_SELECT; 
+                break;
+            case SDLK_w: 
+                mask = NES_BUTTON_UP; 
+                break;
+            case SDLK_s: 
+                mask = NES_BUTTON_DOWN; 
+                break;
+            case SDLK_a: 
+                mask = NES_BUTTON_LEFT; 
+                break;
+            case SDLK_d: 
                 mask = NES_BUTTON_RIGHT; 
                 break;
             default:

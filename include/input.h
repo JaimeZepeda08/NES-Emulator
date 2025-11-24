@@ -25,10 +25,9 @@ typedef struct CNTRL {
 
 CNTRL *cntrl_init();
 void cntrl_free(CNTRL *cntrl);
-void cntrl_handle_input(CNTRL *cntrl, SDL_Event *event);
+void cntrl1_handle_input(CNTRL *cntrl, SDL_Event *event);
+void cntrl2_handle_input(CNTRL *cntrl, SDL_Event *event);
 uint8_t cntrl_read(CNTRL *cntrl);
 void cntrl_write(CNTRL *cntrl, uint8_t value);
-
-extern CNTRL *controller;
 
 #endif

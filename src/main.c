@@ -128,7 +128,8 @@ int main(int argc, char *argv[]) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {       
             // Controller input
-            cntrl_handle_input(nes->controller, &event);
+            cntrl1_handle_input(nes->controller1, &event);
+            cntrl2_handle_input(nes->controller2, &event);
 
             if (event.type == SDL_KEYUP) {
                 if (event.key.keysym.sym == SDLK_q) {
