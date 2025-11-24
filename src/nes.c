@@ -4,7 +4,7 @@
 
 NES *nes = NULL; 
 
-void nes_init(char *filename) {
+void nes_init(char *filename, int display_flag) {
     nes = (NES *)malloc(sizeof(NES)); 
     if (nes == NULL) {
         fprintf(stderr, "Memory allocation for NES instance failed!\n");
@@ -32,6 +32,9 @@ void nes_init(char *filename) {
     // initialize controllers
     nes->controller1 = cntrl_init();
     nes->controller2 = cntrl_init();
+
+    // initialize display
+    nes->display = window_init(display_flag); // pass display flag for debug display
 }
 
 void nes_free() {
@@ -57,6 +60,9 @@ void nes_free() {
         if (nes->mapper) {
             mapper_free(nes->mapper);   
         }
+        if (nes->display) {
+            free_display(nes->display);
+        }
         
         free(nes);
         
@@ -64,7 +70,7 @@ void nes_free() {
     }
 }
 
-int nes_cycle(uint32_t *last_time, SDL_Renderer *renderer, SDL_Texture *game_texture, TTF_Font *font, int pt_enable) {
+int nes_cycle(uint32_t *last_time) {
     // run cpu cycle (unless DMA in progress)
     if (nes->ppu->oam_dma_transfer == 0) {
         cpu_run_cycle(nes->cpu);
@@ -93,7 +99,7 @@ int nes_cycle(uint32_t *last_time, SDL_Renderer *renderer, SDL_Texture *game_tex
             }
 
             // render display
-            render_display(renderer, game_texture, font, pt_enable);
+            render_display(nes->display);
         }
     }
 
@@ -208,7 +214,9 @@ uint8_t nes_ppu_read(uint16_t address) {
     }
     // nametables and mirrors 
     else if (address >= 0x2000 && address < 0x3F00) {
-        return nes->vram[nes->mapper->mirror_nametable(nes->mapper, address) % 0x0FFF]; // mirror by 4KB (size of nametable space)
+        uint16_t addr_wrapped = 0x2000 + (address % 0x1000); // wrap to 0x2000-0x2FFF
+        uint16_t mirrored_addr = nes->mapper->mirror_nametable(nes->mapper, addr_wrapped);
+        return nes->vram[mirrored_addr - 0x2000]; // subtract base to get VRAM index (0x2000-0x27FF -> 0x0000-0x07FF)
     }
     // pallette RAM and mirrors 
     else if (address >= 0x3F00 && address <= PPU_MEMORY_SIZE) {
@@ -228,7 +236,9 @@ void nes_ppu_write(uint16_t address, uint8_t value) {
     }
     // nametables and mirrors 
     else if (address >= 0x2000 && address < 0x3F00) {
-        nes->vram[nes->mapper->mirror_nametable(nes->mapper, address) % 0x0FFF] = value; // mirror by 4KB (size of nametable space)
+        uint16_t addr_wrapped = 0x2000 + (address % 0x1000); // wrap to 0x2000-0x2FFF
+        uint16_t mirrored_addr = nes->mapper->mirror_nametable(nes->mapper, addr_wrapped);
+        nes->vram[mirrored_addr - 0x2000] = value; // subtract base to get VRAM index (0x2000-0x27FF -> 0x0000-0x07FF)
         return;
     }
     // pallette RAM and mirrors 

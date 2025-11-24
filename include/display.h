@@ -1,3 +1,6 @@
+#ifndef DISPLAY_H
+#define DISPLAY_H
+
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include "ppu.h"
@@ -20,6 +23,16 @@
 #define WINDOW_WIDTH  (GAME_WIDTH + (int)(PT_WIDTH * SCALE_FACTOR))
 #define WINDOW_HEIGHT (GAME_HEIGHT + DEBUG_HEIGHT)
 
+typedef struct DISPLAY {
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+    SDL_Texture *game_texture;
+    TTF_Font *font;
+    int debug_enable; // shows pattern tables, name tables and CPU/PPU info when enabled
+} DISPLAY;
 
-SDL_Window *window_init(int pt_enable);
-void render_display(SDL_Renderer *renderer, SDL_Texture *game_texture, TTF_Font *font, int pt_enable);
+DISPLAY *window_init(int debug_enable);
+void free_display(DISPLAY *display);
+void render_display(DISPLAY *display);
+
+#endif

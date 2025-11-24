@@ -13,18 +13,12 @@
 #include "../include/display.h"
 #include "../include/apu.h"
 
-void initialize_display();
 void clean_up();
 void handle_sigint(int sig);
 
-SDL_Window *window;
-SDL_Renderer *renderer;
-SDL_Texture *game_texture;
-TTF_Font *font;
-
 uint32_t last_time;
 
-int pt_enable = 0; // pattern table and register display
+int display = 0; // pattern table and register display
 
 int debug_enable = 0;
 uint16_t breakpoint = 0xFFFF;
@@ -32,7 +26,7 @@ int at_break = 0;
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s <rom.nes> [--pt] [--debug] [--break <addr>]\n", argv[0]);
+        fprintf(stderr, "Usage: %s <rom.nes> [--display] [--debug] [--break <addr>]\n", argv[0]);
         exit(1);
     }
 
@@ -52,9 +46,9 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        // --pt flag for pattern table display
-        if (strcmp(argv[i], "--pt") == 0) {
-            pt_enable = 1;
+        // --display flag for extra debug display
+        if (strcmp(argv[i], "--display") == 0) {
+            display = 1;
             i++;
             continue;
         }
@@ -102,10 +96,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, handle_sigint);
 
     // Initialize NES
-    nes_init(rom);
-
-    // Initialize Display
-    initialize_display();
+    nes_init(rom, display);
 
     printf("\nStarting execution of program [%s]\n\n", rom); 
 
@@ -144,7 +135,7 @@ int main(int argc, char *argv[]) {
                                 step = !step; // Toggle step mode
                                 break;
                             case SDLK_p:
-                                running = nes_cycle(&last_time, renderer, game_texture, font, pt_enable); // Run next instruction
+                                running = nes_cycle(&last_time); // Run next instruction
                                 break;
                             default:
                                 break;
@@ -160,7 +151,7 @@ int main(int argc, char *argv[]) {
 
             // run enough CPU cycles to simulate 1/60th of a second
             while (cycles_this_frame < CYCLES_PER_FRAME && running) {
-                running = nes_cycle(&last_time, renderer, game_texture, font, pt_enable); 
+                running = nes_cycle(&last_time); 
                 cycles_this_frame += nes->cpu->cycles;    // get actual number of cycles run
 
                 // handle infitite loop edge case
@@ -190,21 +181,6 @@ int main(int argc, char *argv[]) {
 
     clean_up();
     return 0;
-}
-
-void initialize_display(){
-    window = window_init(pt_enable);
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (TTF_Init() < 0) {
-        printf("TTF Init failed: %s\n", TTF_GetError());
-        exit(1);
-    }
-    font = TTF_OpenFont("fonts/Ubuntu_Mono/UbuntuMono-Regular.ttf", 20);
-    if (!font) {
-        printf("Failed to load font: %s\n", TTF_GetError());
-        exit(1);
-    }
-    game_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 256, 240);
 }
 
 void clean_up() {

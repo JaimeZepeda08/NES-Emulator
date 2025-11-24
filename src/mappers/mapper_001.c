@@ -173,19 +173,22 @@ void mapper_mmc1_cpu_write(Mapper *m, uint16_t addr, uint8_t value) {
                 if (addr >= 0x8000 && addr <= 0x9FFF) {
                     regs->prg_bank_mode = (regs->shift_reg >> 2) & 0x03;
                     regs->chr_bank_mode = (regs->shift_reg >> 4) & 0x01;
-
                     // set mirroring mode
                     switch (regs->shift_reg & 0x03) {
                         case 0:
+                            printf("New Mirroring Mode: SINGLE_LOWER\n");
                             m->mirroring = MIRROR_SINGLE_LOWER;
                             break;
                         case 1:
+                            printf("New Mirroring Mode: SINGLE_UPPER\n");
                             m->mirroring = MIRROR_SINGLE_UPPER;
                             break;
                         case 2:
+                            printf("New Mirroring Mode: VERTICAL\n");
                             m->mirroring = MIRROR_VERTICAL;
                             break;
                         case 3:
+                            printf("New Mirroring Mode: HORIZONTAL\n");
                             m->mirroring = MIRROR_HORIZONTAL;
                             break;
                     }
@@ -292,13 +295,16 @@ uint16_t mirror_nametable_mmc1(Mapper *m, uint16_t address) {
             if (address >= 0x2C00 && address < 0x3000)
                 return address - 0x800;
             break;
+            
         case MIRROR_HORIZONTAL:
             if (address >= 0x2400 && address < 0x2800)
                 return address - 0x400;
             if (address >= 0x2C00 && address < 0x3000)
                 return address - 0x800;
             break;
+            
         case MIRROR_SINGLE_LOWER:
+            // All addresses map to 0x2000-0x23FF
             if (address >= 0x2400 && address < 0x2800)
                 return address - 0x400;
             if (address >= 0x2800 && address < 0x2C00)
@@ -306,14 +312,17 @@ uint16_t mirror_nametable_mmc1(Mapper *m, uint16_t address) {
             if (address >= 0x2C00 && address < 0x3000)
                 return address - 0xC00;
             break;
+            
         case MIRROR_SINGLE_UPPER:
-            if (address >= 0x2400 && address < 0x2800)
+            // All addresses map to 0x2400-0x27FF
+            if (address >= 0x2000 && address < 0x2400)
                 return address + 0x400;
             if (address >= 0x2800 && address < 0x2C00)
-                return address + 0x000;
-            if (address >= 0x2C00 && address < 0x3000)
                 return address - 0x400;
+            if (address >= 0x2C00 && address < 0x3000)
+                return address - 0x800;
             break;
     }
+
     return address;
 }

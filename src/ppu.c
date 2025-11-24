@@ -10,7 +10,7 @@ uint32_t calculate_pixel_color(PPU *ppu, int x, int y);
 uint32_t get_background_pixel(PPU *ppu, int *bg_transparent);
 uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite_hit, int bg_transparent);
 
-struct PPU *ppu_init() {
+PPU *ppu_init() {
     printf("Initializing PPU...");
 
     struct PPU *ppu = (struct PPU *)malloc(sizeof(struct PPU));

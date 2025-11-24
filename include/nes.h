@@ -69,11 +69,13 @@ typedef struct NES {
 
     uint8_t ram[RAM_SIZE];      // 2KB CPU RAM
     uint8_t vram[VRAM_SIZE];    // 2KB PPU VRAM 
+
+    DISPLAY *display;
 } NES;
 
-void nes_init(char *filename);
+void nes_init(char *filename, int display_flag);
 void nes_free();
-int nes_cycle(uint32_t *last_time, SDL_Renderer *renderer, SDL_Texture *game_texture, TTF_Font *font, int pt_enable);
+int nes_cycle(uint32_t *last_time);
 uint8_t nes_cpu_read(uint16_t address);
 void nes_cpu_write(uint16_t address, uint8_t value);
 uint8_t nes_ppu_read(uint16_t address);
