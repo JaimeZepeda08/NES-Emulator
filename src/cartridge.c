@@ -162,15 +162,17 @@ void load_rom(Cartridge *cart, const char *filename) {
         cart->prg_ram_size = 8192;  // Default to 8KB if not specified
     }
 
-    if (cart->battery) {
-        cart->prg_ram = (uint8_t *)calloc(1, cart->prg_ram_size);
-        if (!cart->prg_ram) {
-            fclose(rom);
-            free(cart->prg_rom);
-            free(cart->chr_rom);
-            FATAL_ERROR("ROM Loader", "Failed to allocate PRG RAM memory");
-        }
-        
+    // allocate PRG RAM even if it is not battery-backed because some games still use ram
+    // these games give user a password to continue instead of saving state
+    cart->prg_ram = (uint8_t *)calloc(1, cart->prg_ram_size);
+    if (!cart->prg_ram) {
+        fclose(rom);
+        free(cart->prg_rom);
+        free(cart->chr_rom);
+        FATAL_ERROR("ROM Loader", "Failed to allocate PRG RAM memory");
+    }
+
+    if (cart->battery) {        
         // load from save file if it exists
         char save_filename[256];
         snprintf(save_filename, sizeof(save_filename), "%s/%s.%s", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
