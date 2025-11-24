@@ -2,14 +2,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-uint16_t mirror_nametable(uint16_t address);
-
 NES *nes = NULL; 
 
 void nes_init(char *filename) {
     nes = (NES *)malloc(sizeof(NES)); 
     if (nes == NULL) {
-        fprintf(stderr, " Memory allocation for NES instance failed!\n");
+        fprintf(stderr, "Memory allocation for NES instance failed!\n");
         exit(1);
     }
     printf("Initializing NES System...\n");
@@ -130,7 +128,7 @@ uint8_t nes_cpu_read(uint16_t address) {
     else if (address >= 0x6000 && address <= CPU_MEMORY_SIZE) {
         // mapper cpu read
         return nes->mapper->cpu_read(nes->mapper, address);
-    } 
+    }
     // unmapped addresses
     else {
         return 0; // open bus (not addressable)
@@ -194,7 +192,7 @@ uint8_t nes_ppu_read(uint16_t address) {
     }
     // nametables and mirrors 
     else if (address >= 0x2000 && address < 0x3F00) {
-        return nes->vram[mirror_nametable(address) % 0x0FFF]; // mirror by 4KB (size of nametable space)
+        return nes->vram[nes->mapper->mirror_nametable(nes->mapper, address) % 0x0FFF]; // mirror by 4KB (size of nametable space)
     }
     // pallette RAM and mirrors 
     else if (address >= 0x3F00 && address <= PPU_MEMORY_SIZE) {
@@ -214,7 +212,7 @@ void nes_ppu_write(uint16_t address, uint8_t value) {
     }
     // nametables and mirrors 
     else if (address >= 0x2000 && address < 0x3F00) {
-        nes->vram[mirror_nametable(address) % 0x0FFF] = value; // mirror by 4KB (size of nametable space)
+        nes->vram[nes->mapper->mirror_nametable(nes->mapper, address) % 0x0FFF] = value; // mirror by 4KB (size of nametable space)
         return;
     }
     // pallette RAM and mirrors 
@@ -225,22 +223,4 @@ void nes_ppu_write(uint16_t address, uint8_t value) {
     else {
         return; // open bus (not addressable)
     }
-}
-
-uint16_t mirror_nametable(uint16_t address) {
-    switch (nes->mapper->cart->mirroring) {
-        case MIRROR_VERTICAL:
-            if (address >= 0x2800 && address < 0x2C00)
-                return address - 0x800;
-            if (address >= 0x2C00 && address < 0x3000)
-                return address - 0x800;
-            break;
-        case MIRROR_HORIZONTAL:
-            if (address >= 0x2400 && address < 0x2800)
-                return address - 0x400;
-            if (address >= 0x2C00 && address < 0x3000)
-                return address - 0x800;
-            break;
-    }
-    return address;
 }

@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "../include/nes.h"
 #include "../include/cartridge.h"
 #include "../include/log.h"
 
 void load_rom(Cartridge *cart, const char *filename);
+void save_prg_ram_to_file(Cartridge *cart);
 
 Cartridge *cart_init(const char *filename) {
     Cartridge *cart = (Cartridge *)malloc(sizeof(Cartridge));
@@ -13,11 +16,17 @@ Cartridge *cart_init(const char *filename) {
         exit(1);
     }
 
-    // Initialize to NULL
+    // memory from cartridge
     cart->prg_rom = NULL;
     cart->chr_rom = NULL;
+    cart->prg_ram = NULL;
+
+    // memory sizes
     cart->prg_size = 0;
     cart->chr_size = 0;
+    cart->prg_ram_size = 0;
+
+    // mapper and mirroring info
     cart->mapper_id = 0;
     cart->mirroring = 0;
     cart->battery = 0;
@@ -30,6 +39,10 @@ Cartridge *cart_init(const char *filename) {
 
 void cart_free(Cartridge *cart) {
     if (cart) {
+        // save PRG RAM to file if battery-backed
+        if (cart->battery) {
+            save_prg_ram_to_file(cart);
+        }
         if (cart->prg_rom) {
             free(cart->prg_rom);
         }
@@ -55,10 +68,14 @@ void load_rom(Cartridge *cart, const char *filename) {
     //  11-15       |   Unused padding                  //
     //////////////////////////////////////////////////////
 
-    FILE *rom = fopen(filename, "rb");  // Open file in binary mode
+    char rom_filename[256];
+    snprintf(rom_filename, sizeof(rom_filename), "%s/%s", ROM_FILE_DIR, filename);
+    FILE *rom = fopen(rom_filename, "rb");  
     if (!rom) {
-        FATAL_ERROR("Memory", "Failed to open ROM file: %s", filename);
+        FATAL_ERROR("Memory", "Failed to open ROM file: %s", rom_filename);
     }
+
+    cart->filename = strdup(filename);
 
     // Read iNES header (16 bytes)
     uint8_t header[16];
@@ -90,7 +107,7 @@ void load_rom(Cartridge *cart, const char *filename) {
     cart->mapper_id = mapper_low | mapper_high;
 
     // Set mirroring and battery flags
-    cart->mirroring = (flag6 & 0x01) ? MIRROR_VERTICAL : MIRROR_HORIZONTAL;
+    cart->mirroring = ~(flag6 & 0x01);
     cart->battery = (flag6 & 0x02) ? 1 : 0;
 
     // Check for trainer (512 bytes between header and PRG data)
@@ -137,7 +154,61 @@ void load_rom(Cartridge *cart, const char *filename) {
         }
     }
 
+    // PRG RAM size
+    uint8_t flag8 = header[8];
+    if (flag8 > 0) {
+        cart->prg_ram_size = flag8 * 8192;  // 8KB units
+    } else {
+        cart->prg_ram_size = 8192;  // Default to 8KB if not specified
+    }
+
+    if (cart->battery) {
+        cart->prg_ram = (uint8_t *)calloc(1, cart->prg_ram_size);
+        if (!cart->prg_ram) {
+            fclose(rom);
+            free(cart->prg_rom);
+            free(cart->chr_rom);
+            FATAL_ERROR("ROM Loader", "Failed to allocate PRG RAM memory");
+        }
+        
+        // load from save file if it exists
+        char save_filename[256];
+        snprintf(save_filename, sizeof(save_filename), "%s/%s.%s", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+        FILE *save_file = fopen(save_filename, "rb");
+        if (save_file) {
+            fread(cart->prg_ram, 1, cart->prg_ram_size, save_file);
+            fclose(save_file);
+            printf("Loaded PRG RAM from save file: %s/%s.%s\n", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+        }
+        else {
+            printf("No save file found for PRG RAM: %s/%s.%s\n", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+        }
+    }
+
     fclose(rom);
-    printf("ROM Loaded: %s (%d KB PRG, %d KB CHR)\n", 
-           filename, cart->prg_size / 1024, cart->chr_size / 1024);
+    printf("ROM Loaded: %s (%d KB PRG, %d KB CHR, %d KB PRG RAM)\n", 
+           filename, cart->prg_size / 1024, cart->chr_size / 1024, cart->prg_ram_size / 1024);
+}
+
+void save_prg_ram_to_file(Cartridge *cart) {
+    if (cart->battery && cart->prg_ram) {
+        // create directory if it doesn't exist
+        #ifdef _WIN32
+            _mkdir(SAVE_FILE_DIR);
+        #else
+            mkdir(SAVE_FILE_DIR, 0755);
+        #endif
+
+        // save to file
+        char save_filename[256];
+        snprintf(save_filename, sizeof(save_filename), "%s/%s.%s", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+        FILE *save_file = fopen(save_filename, "wb");
+        if (save_file) {
+            fwrite(cart->prg_ram, 1, cart->prg_ram_size, save_file);
+            fclose(save_file);
+            printf("Saved PRG RAM to save file: %s/%s.%s\n", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+        } else {
+            printf("Failed to open save file for writing: %s/%s.%s\n", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+        }
+    }
 }

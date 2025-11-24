@@ -209,12 +209,6 @@ void initialize_display(){
 void clean_up() {
     printf("Cleaning up...\n");
     nes_free();
-    SDL_DestroyTexture(game_texture);
-    TTF_CloseFont(font);
-    TTF_Quit();
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
     printf("DONE\n");
 }
 

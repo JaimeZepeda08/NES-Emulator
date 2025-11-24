@@ -1,6 +1,8 @@
 .DS_Store
 .vscode/
+.github/
 roms/
+saves/
 build/
 *.o
 nes-emulator
