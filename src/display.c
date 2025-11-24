@@ -86,9 +86,95 @@ void render_display(DISPLAY *display) {
     SDL_SetRenderDrawColor(display->renderer, 0, 0, 0, 255); 
     SDL_RenderClear(display->renderer);
 
+    int x_offset = 0;
+    
+    // If debug mode is enabled, draw nametables first (on the left)
+    if (display->debug_enable) {
+        x_offset = NT_DISPLAY_WIDTH;
+        
+        // ======================= Nametables =======================
+        static SDL_Texture *nt_texture = NULL;
+        static int frame_counter = 0;
+        
+        // Create texture if it doesn't exist
+        if (!nt_texture) {
+            nt_texture = SDL_CreateTexture(display->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, NT_WIDTH, NT_HEIGHT * 2);
+            if (!nt_texture) {
+                goto skip_nametables;
+            }
+        }
+        
+        // Only update nametables every 5 frames to improve performance
+        if (frame_counter % 5 == 0) {
+            // Render the 2 physical nametables (2KB VRAM)
+            SDL_SetRenderTarget(display->renderer, nt_texture);
+            SDL_SetRenderDrawColor(display->renderer, 0, 0, 0, 255);
+            SDL_RenderClear(display->renderer);
+            
+            // Render each of the 2 nametables (actual VRAM at 0x2000-0x23FF and 0x2400-0x27FF)
+            for (int nt = 0; nt < 2; nt++) {
+            uint16_t nt_base = 0x2000 + (nt * 0x0400); // 0x2000, 0x2400
+            int y_nt_offset = nt * NT_HEIGHT;
+            
+            // Iterate through all 30 rows and 32 columns of tiles
+            for (int ty = 0; ty < 30; ty++) {
+                for (int tx = 0; tx < 32; tx++) {
+                    // Read tile index from nametable
+                    uint16_t tile_addr = nt_base + ty * 32 + tx;
+                    uint8_t tile_id = nes_ppu_read(tile_addr);
+                    
+                    // Get pattern table base (from PPUCTRL bit 4)
+                    uint16_t pattern_base = (nes->ppu->PPUCTRL & 0x10) ? 0x1000 : 0x0000;
+                    uint16_t tile_pattern_addr = pattern_base + tile_id * 16;
+                    
+                    // Render the 8x8 tile
+                    for (int py = 0; py < 8; py++) {
+                        uint8_t plane0 = nes_ppu_read(tile_pattern_addr + py);
+                        uint8_t plane1 = nes_ppu_read(tile_pattern_addr + py + 8);
+                        
+                        for (int px = 0; px < 8; px++) {
+                            uint8_t bit0 = (plane0 >> (7 - px)) & 1;
+                            uint8_t bit1 = (plane1 >> (7 - px)) & 1;
+                            uint8_t pixel = (bit1 << 1) | bit0;
+                            
+                            // Use grayscale based on pixel value (0-3)
+                            uint8_t shade = 85 * pixel;  // 0, 85, 170, 255
+                            SDL_SetRenderDrawColor(display->renderer, shade, shade, shade, 255);
+                            
+                            SDL_Rect pixel_rect = {
+                                .x = tx * 8 + px,
+                                .y = y_nt_offset + ty * 8 + py,
+                                .w = 1,
+                                .h = 1
+                            };
+                            SDL_RenderFillRect(display->renderer, &pixel_rect);
+                        }
+                    }
+                }
+            }
+        }
+            
+            SDL_SetRenderTarget(display->renderer, NULL);
+        }
+        
+        frame_counter++;
+        
+        // Copy nametables to screen (always display, even if not updated this frame)
+        SDL_Rect nt_dest = {
+            .x = 0,
+            .y = 0,
+            .w = NT_DISPLAY_WIDTH,
+            .h = NT_DISPLAY_HEIGHT
+        };
+        SDL_RenderCopy(display->renderer, nt_texture, NULL, &nt_dest);
+        
+        skip_nametables:;
+        // ======================= Nametables =======================
+    }
+    
     // ======================= Game Window =======================
     SDL_UpdateTexture(display->game_texture, NULL, nes->ppu->frame_buffer, NES_WIDTH * sizeof(uint32_t)); 
-    SDL_Rect game_rect = {0, 0, GAME_WIDTH, GAME_HEIGHT + 2};
+    SDL_Rect game_rect = {x_offset, 0, GAME_WIDTH, GAME_HEIGHT + 2};
     SDL_RenderCopy(display->renderer, display->game_texture, NULL, &game_rect);  
     // ======================= Game Window =======================
 
@@ -149,9 +235,9 @@ void render_display(DISPLAY *display) {
 
     SDL_SetRenderTarget(display->renderer, NULL);
 
-    // Copy pattern table to screen
+    // Copy pattern table to screen (to the right of game window)
     SDL_Rect pt_dest = {
-        .x = GAME_WIDTH,
+        .x = x_offset + GAME_WIDTH,
         .y = 0,
         .w = (int)(PT_WIDTH * SCALE_FACTOR),
         .h = (int)(PT_HEIGHT * SCALE_FACTOR)
