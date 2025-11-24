@@ -176,19 +176,19 @@ void mapper_mmc1_cpu_write(Mapper *m, uint16_t addr, uint8_t value) {
                     // set mirroring mode
                     switch (regs->shift_reg & 0x03) {
                         case 0:
-                            printf("New Mirroring Mode: SINGLE_LOWER\n");
+                            printf("New Mirroring Mode: SINGLE_LOWER\n"); 
                             m->mirroring = MIRROR_SINGLE_LOWER;
                             break;
                         case 1:
-                            printf("New Mirroring Mode: SINGLE_UPPER\n");
+                            printf("New Mirroring Mode: SINGLE_UPPER\n"); 
                             m->mirroring = MIRROR_SINGLE_UPPER;
                             break;
                         case 2:
-                            printf("New Mirroring Mode: VERTICAL\n");
+                            printf("New Mirroring Mode: VERTICAL\n"); 
                             m->mirroring = MIRROR_VERTICAL;
                             break;
                         case 3:
-                            printf("New Mirroring Mode: HORIZONTAL\n");
+                            printf("New Mirroring Mode: HORIZONTAL\n"); 
                             m->mirroring = MIRROR_HORIZONTAL;
                             break;
                     }
