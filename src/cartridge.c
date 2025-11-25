@@ -6,15 +6,19 @@
 #include "../include/cartridge.h"
 #include "../include/log.h"
 
-void load_rom(Cartridge *cart, const char *filename);
+void load_rom(Cartridge *cart);
 void save_prg_ram_to_file(Cartridge *cart);
 
-Cartridge *cart_init(const char *filename) {
+Cartridge *cart_init(const char *rom_filename, const char *save_filename) {
     Cartridge *cart = (Cartridge *)malloc(sizeof(Cartridge));
     if (cart == NULL) {
         fprintf(stderr, " Memory allocation for Cartridge failed!\n");
         exit(1);
     }
+
+    // store filenames
+    cart->rom_filename = strdup(rom_filename);
+    cart->save_filename = (save_filename != NULL) ? strdup(save_filename) : NULL;
 
     // memory from cartridge
     cart->prg_rom = NULL;
@@ -32,7 +36,7 @@ Cartridge *cart_init(const char *filename) {
     cart->battery = 0;
 
     // Load ROM data
-    load_rom(cart, filename);
+    load_rom(cart);
 
     return cart;
 }
@@ -42,6 +46,12 @@ void cart_free(Cartridge *cart) {
         // save PRG RAM to file if battery-backed
         if (cart->battery) {
             save_prg_ram_to_file(cart);
+        }
+        if (cart->rom_filename) {
+            free(cart->rom_filename);
+        }
+        if (cart->save_filename) {
+            free(cart->save_filename);
         }
         if (cart->prg_rom) {
             free(cart->prg_rom);
@@ -53,7 +63,7 @@ void cart_free(Cartridge *cart) {
     }
 }
 
-void load_rom(Cartridge *cart, const char *filename) {
+void load_rom(Cartridge *cart) {
     //////////////////////////////////////////////////////
     //                   iNES Format                    //
     //==================================================//
@@ -68,14 +78,10 @@ void load_rom(Cartridge *cart, const char *filename) {
     //  11-15       |   Unused padding                  //
     //////////////////////////////////////////////////////
 
-    char rom_filename[256];
-    snprintf(rom_filename, sizeof(rom_filename), "%s/%s", ROM_FILE_DIR, filename);
-    FILE *rom = fopen(rom_filename, "rb");  
+    FILE *rom = fopen(cart->rom_filename, "rb");  
     if (!rom) {
-        FATAL_ERROR("Memory", "Failed to open ROM file: %s", rom_filename);
+        FATAL_ERROR("Memory", "Failed to open ROM file: %s", cart->rom_filename);
     }
-
-    cart->filename = strdup(filename);
 
     // Read iNES header (16 bytes)
     uint8_t header[16];
@@ -172,45 +178,36 @@ void load_rom(Cartridge *cart, const char *filename) {
         FATAL_ERROR("ROM Loader", "Failed to allocate PRG RAM memory");
     }
 
-    if (cart->battery) {        
+    if (cart->battery && cart->save_filename) {        
         // load from save file if it exists
-        char save_filename[256];
-        snprintf(save_filename, sizeof(save_filename), "%s/%s.%s", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
-        FILE *save_file = fopen(save_filename, "rb");
+        FILE *save_file = fopen(cart->save_filename, "rb");
         if (save_file) {
             fread(cart->prg_ram, 1, cart->prg_ram_size, save_file);
             fclose(save_file);
-            printf("Loaded PRG RAM from save file: %s/%s.%s\n", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+            printf("Loaded PRG RAM from save file: %s\n", cart->save_filename);
         }
         else {
-            printf("No save file found for PRG RAM: %s/%s.%s\n", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+            printf("No save file found at: %s\n", cart->save_filename);
         }
+    } else if (cart->battery && !cart->save_filename) {
+        printf("Warning: Game is battery-backed but no save file was provided. RAM will not be saved.\n");
     }
 
     fclose(rom);
     printf("ROM Loaded: %s (%d KB PRG, %d KB CHR, %d KB PRG RAM)\n", 
-           filename, cart->prg_size / 1024, cart->chr_size / 1024, cart->prg_ram_size / 1024);
+           cart->rom_filename, cart->prg_size / 1024, cart->chr_size / 1024, cart->prg_ram_size / 1024);
 }
 
 void save_prg_ram_to_file(Cartridge *cart) {
-    if (cart->battery && cart->prg_ram) {
-        // create directory if it doesn't exist
-        #ifdef _WIN32
-            _mkdir(SAVE_FILE_DIR);
-        #else
-            mkdir(SAVE_FILE_DIR, 0755);
-        #endif
-
+    if (cart->battery && cart->prg_ram && cart->save_filename) {
         // save to file
-        char save_filename[256];
-        snprintf(save_filename, sizeof(save_filename), "%s/%s.%s", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
-        FILE *save_file = fopen(save_filename, "wb");
+        FILE *save_file = fopen(cart->save_filename, "wb");
         if (save_file) {
             fwrite(cart->prg_ram, 1, cart->prg_ram_size, save_file);
             fclose(save_file);
-            printf("Saved PRG RAM to save file: %s/%s.%s\n", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+            printf("Saved PRG RAM to save file: %s\n", cart->save_filename);
         } else {
-            printf("Failed to open save file for writing: %s/%s.%s\n", SAVE_FILE_DIR, cart->filename, SAVE_RAM_FILE_EXT);
+            printf("Failed to open save file for writing: %s\n", cart->save_filename);
         }
     }
 }

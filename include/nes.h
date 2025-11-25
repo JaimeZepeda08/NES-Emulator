@@ -73,7 +73,7 @@ typedef struct NES {
     DISPLAY *display;
 } NES;
 
-void nes_init(char *filename, int display_flag);
+void nes_init(char *rom_filename, char *save_filename, int display_flag);
 void nes_free();
 int nes_cycle(uint32_t *last_time);
 uint8_t nes_cpu_read(uint16_t address);

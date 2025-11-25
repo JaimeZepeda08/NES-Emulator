@@ -26,22 +26,26 @@ int at_break = 0;
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s <rom.nes> [--display] [--debug] [--break <addr>]\n", argv[0]);
+        fprintf(stderr, "Usage: %s <rom.nes> [<save.nes>] [--display] [--debug] [--break <addr>]\n", argv[0]);
         exit(1);
     }
 
     char *rom = NULL;
+    char *save = NULL;
     int i = 1;
 
     // parse cli arguments
     while (i < argc) {
-        // ROM file
+        // ROM file or save file
         if (argv[i][0] != '-') {
-            if (rom != NULL) {
-                fprintf(stderr, "Error: multiple ROM files provided.\n");
+            if (rom == NULL) {
+                rom = argv[i];
+            } else if (save == NULL) {
+                save = argv[i];
+            } else {
+                fprintf(stderr, "Error: too many positional arguments provided.\n");
                 exit(1);
             }
-            rom = argv[i];
             i++;
             continue;
         }
@@ -96,7 +100,7 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, handle_sigint);
 
     // Initialize NES
-    nes_init(rom, display);
+    nes_init(rom, save, display);
 
     printf("\nStarting execution of program [%s]\n\n", rom); 
 

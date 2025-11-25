@@ -4,7 +4,7 @@
 
 NES *nes = NULL; 
 
-void nes_init(char *filename, int display_flag) {
+void nes_init(char *rom_filename, char *save_filename, int display_flag) {
     nes = (NES *)malloc(sizeof(NES)); 
     if (nes == NULL) {
         fprintf(stderr, "Memory allocation for NES instance failed!\n");
@@ -17,7 +17,7 @@ void nes_init(char *filename, int display_flag) {
     memset(nes->vram, 0, VRAM_SIZE);
 
     // load cartridge and mapper (before CPU init, since CPU reads reset vector from ROM)
-    Cartridge *cart = cart_init(filename);
+    Cartridge *cart = cart_init(rom_filename, save_filename);
     nes->mapper = mapper_init(cart);
 
     // initialize CPU (now it can read the reset vector)

@@ -1,14 +1,11 @@
 #ifndef CARTRIDGE_H
 #define CARTRIDGE_H
 
-#define ROM_FILE_DIR        "roms"
-#define SAVE_FILE_DIR       "saves"
-#define SAVE_RAM_FILE_EXT   "ram"
-
 #include <stdint.h> 
 
 typedef struct Cartridge {
-    char *filename; // store file name for save RAM purposes
+    char *rom_filename;  // ROM file path
+    char *save_filename; // save file path (can be NULL)
     // Cartridge memory (dynamically allocated because sizes vary)
     uint8_t *prg_rom;
     uint8_t *chr_rom;  // could be ROM or RAM
@@ -21,7 +18,7 @@ typedef struct Cartridge {
     int battery;
 } Cartridge;
 
-Cartridge *cart_init(const char *filename);
+Cartridge *cart_init(const char *rom_filename, const char *save_filename);
 void cart_free(Cartridge *cart);
 
 #endif
