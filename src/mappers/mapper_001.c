@@ -3,6 +3,11 @@
 #include "../../include/mapper.h"
 #include "../../include/log.h"
 
+#define MMC1_PRG_BANK_SIZE_32K 32768    // 32KB
+#define MMC1_PRG_BANK_SIZE_16K 16384    // 16KB
+#define MMC1_CHR_BANK_SIZE_8K 8192      // 8KB
+#define MMC1_CHR_BANK_SIZE_4K 4096      // 4KB
+
 uint8_t mapper_mmc1_cpu_read(Mapper *m, uint16_t addr);
 void mapper_mmc1_cpu_write(Mapper *m, uint16_t addr, uint8_t value);
 uint8_t mapper_mmc1_ppu_read(Mapper *m, uint16_t addr);
@@ -83,7 +88,7 @@ uint8_t mapper_mmc1_cpu_read(Mapper *m, uint16_t addr) {
         if (regs->prg_bank_mode == 0 || regs->prg_bank_mode == 1) {
             uint8_t bank = (regs->prg_bank & 0x0E) >> 1; // get bank index (ignore LSB for 32KB mode)
             uint16_t offset = addr - 0x8000; // offset into bank
-            uint32_t prg_addr = (bank * 0x8000) + offset; // calculate physical address
+            uint32_t prg_addr = (bank * MMC1_PRG_BANK_SIZE_32K) + offset; // calculate physical address
             prg_addr = prg_addr % m->cart->prg_size; // wrap around if out of bounds
             return m->cart->prg_rom[prg_addr];
         }
@@ -96,7 +101,7 @@ uint8_t mapper_mmc1_cpu_read(Mapper *m, uint16_t addr) {
                 // switchable bank
                 uint8_t bank = regs->prg_bank & 0x0F; // get bank index (all bits for 16KB mode because we need to address more banks)
                 uint16_t offset = addr - 0xC000; // offset into bank
-                uint32_t prg_addr = (bank * 0x4000) + offset; // calculate physical address
+                uint32_t prg_addr = (bank * MMC1_PRG_BANK_SIZE_16K) + offset; // calculate physical address
                 prg_addr = prg_addr % m->cart->prg_size; // wrap around if out of bounds
                 return m->cart->prg_rom[prg_addr];
             }
@@ -107,12 +112,12 @@ uint8_t mapper_mmc1_cpu_read(Mapper *m, uint16_t addr) {
                 // switchable bank
                 uint8_t bank = regs->prg_bank & 0x0F; // get bank index (all bits for 16KB mode because we need to address more banks)
                 uint16_t offset = addr - 0x8000; // offset into bank
-                uint32_t prg_addr = (bank * 0x4000) + offset; // calculate physical address
+                uint32_t prg_addr = (bank * MMC1_PRG_BANK_SIZE_16K) + offset; // calculate physical address
                 prg_addr = prg_addr % m->cart->prg_size; // wrap around if out of bounds
                 return m->cart->prg_rom[prg_addr];
             } else {
                 // fixed to last bank
-                uint32_t last_bank_start = m->cart->prg_size - 0x4000; // start of last 16KB bank
+                uint32_t last_bank_start = m->cart->prg_size - MMC1_PRG_BANK_SIZE_16K; // start of last 16KB bank
                 uint16_t offset = addr - 0xC000; // offset into bank
                 uint32_t prg_addr = last_bank_start + offset; // calculate physical address
                 return m->cart->prg_rom[prg_addr];
@@ -220,7 +225,7 @@ uint8_t mapper_mmc1_ppu_read(Mapper *m, uint16_t addr) {
         if (regs->chr_bank_mode == 0) {
             uint8_t bank = (regs->chr_bank_0 & 0x1E) >> 1; // get bank index (ignore LSB for 8KB mode)
             uint16_t offset = addr; // offset into bank
-            uint32_t chr_addr = (bank * 0x2000) + offset; // calculate physical address
+            uint32_t chr_addr = (bank * MMC1_CHR_BANK_SIZE_8K) + offset; // calculate physical address
             chr_addr = chr_addr % m->cart->chr_size; // wrap around if out of bounds
             return m->cart->chr_rom[chr_addr];
         }
@@ -230,7 +235,7 @@ uint8_t mapper_mmc1_ppu_read(Mapper *m, uint16_t addr) {
                 // first 4KB bank
                 uint8_t bank = regs->chr_bank_0 & 0x1F; // get bank index
                 uint16_t offset = addr; // offset into bank
-                uint32_t chr_addr = (bank * 0x1000) + offset; // calculate physical address
+                uint32_t chr_addr = (bank * MMC1_CHR_BANK_SIZE_4K) + offset; // calculate physical address
                 chr_addr = chr_addr % m->cart->chr_size; // wrap around if out of bounds
                 return m->cart->chr_rom[chr_addr];
             } 
@@ -238,7 +243,7 @@ uint8_t mapper_mmc1_ppu_read(Mapper *m, uint16_t addr) {
                 // second 4KB bank
                 uint8_t bank = regs->chr_bank_1 & 0x1F; // get bank index
                 uint16_t offset = addr - 0x1000; // offset into bank
-                uint32_t chr_addr = (bank * 0x1000) + offset; // calculate physical address
+                uint32_t chr_addr = (bank * MMC1_CHR_BANK_SIZE_4K) + offset; // calculate physical address
                 chr_addr = chr_addr % m->cart->chr_size; // wrap around if out of bounds
                 return m->cart->chr_rom[chr_addr];
             }
@@ -257,7 +262,7 @@ void mapper_mmc1_ppu_write(Mapper *m, uint16_t addr, uint8_t value) {
         if (regs->chr_bank_mode == 0) {
             uint8_t bank = (regs->chr_bank_0 & 0x1E) >> 1; // get bank index (ignore LSB for 8KB mode)
             uint16_t offset = addr; // offset into bank
-            uint32_t chr_addr = (bank * 0x2000) + offset; // calculate physical address
+            uint32_t chr_addr = (bank * MMC1_CHR_BANK_SIZE_8K) + offset; // calculate physical address
             chr_addr = chr_addr % m->cart->chr_size; // wrap around if out of bounds
             m->cart->chr_rom[chr_addr] = value;
         }
@@ -267,7 +272,7 @@ void mapper_mmc1_ppu_write(Mapper *m, uint16_t addr, uint8_t value) {
                 // first 4KB bank
                 uint8_t bank = regs->chr_bank_0 & 0x1F; // get bank index
                 uint16_t offset = addr; // offset into bank
-                uint32_t chr_addr = (bank * 0x1000) + offset; // calculate physical address
+                uint32_t chr_addr = (bank * MMC1_CHR_BANK_SIZE_4K) + offset; // calculate physical address
                 chr_addr = chr_addr % m->cart->chr_size; // wrap around if out of bounds
                 m->cart->chr_rom[chr_addr] = value;
             } 
@@ -275,7 +280,7 @@ void mapper_mmc1_ppu_write(Mapper *m, uint16_t addr, uint8_t value) {
                 // second 4KB bank
                 uint8_t bank = regs->chr_bank_1 & 0x1F; // get bank index
                 uint16_t offset = addr - 0x1000; // offset into bank
-                uint32_t chr_addr = (bank * 0x1000) + offset; // calculate physical address
+                uint32_t chr_addr = (bank * MMC1_CHR_BANK_SIZE_4K) + offset; // calculate physical address
                 chr_addr = chr_addr % m->cart->chr_size; // wrap around if out of bounds
                 m->cart->chr_rom[chr_addr] = value;
             }
