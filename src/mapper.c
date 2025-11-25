@@ -66,18 +66,27 @@ void mapper_free(Mapper *mapper) {
 
 uint16_t mirror_nametable(Mapper *m, uint16_t address) {
     switch (m->mirroring) {
-        case MIRROR_VERTICAL:
-            if (address >= 0x2800 && address < 0x2C00)
+        case MIRROR_VERTICAL: {
+            if (address >= 0x2800 && address < 0x2C00) {
                 return address - 0x800;
-            if (address >= 0x2C00 && address < 0x3000)
+            }
+            if (address >= 0x2C00 && address < 0x3000) {
                 return address - 0x800;
+            }
             break;
-        case MIRROR_HORIZONTAL:
-            if (address >= 0x2400 && address < 0x2800)
+        }
+        case MIRROR_HORIZONTAL: {
+            if (address >= 0x2400 && address < 0x2800) {
                 return address - 0x400;
-            if (address >= 0x2C00 && address < 0x3000)
+            }
+            if (address >= 0x2800 && address < 0x2C00) {
+                return address - 0x400;
+            }
+            if (address >= 0x2C00 && address < 0x3000) {
                 return address - 0x800;
+            }
             break;
+        }
     }
     return address;
 }

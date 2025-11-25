@@ -107,7 +107,7 @@ void load_rom(Cartridge *cart, const char *filename) {
     cart->mapper_id = mapper_low | mapper_high;
 
     // Set mirroring and battery flags
-    cart->mirroring = ~(flag6 & 0x01);
+    cart->mirroring = !(flag6 & 0x01);
     cart->battery = (flag6 & 0x02) ? 1 : 0;
 
     // Check for trainer (512 bytes between header and PRG data)

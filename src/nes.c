@@ -216,7 +216,7 @@ uint8_t nes_ppu_read(uint16_t address) {
     else if (address >= 0x2000 && address < 0x3F00) {
         uint16_t addr_wrapped = 0x2000 + (address % 0x1000); // wrap to 0x2000-0x2FFF
         uint16_t mirrored_addr = nes->mapper->mirror_nametable(nes->mapper, addr_wrapped);
-        uint16_t vram_index = (mirrored_addr - 0x2000) % VRAM_SIZE; // ensure within 2KB bounds
+        uint16_t vram_index = (mirrored_addr - 0x2000) % VRAM_SIZE; // subtract base and ensure within 2KB bounds
         return nes->vram[vram_index];
     }
     // pallette RAM and mirrors 
@@ -239,7 +239,7 @@ void nes_ppu_write(uint16_t address, uint8_t value) {
     else if (address >= 0x2000 && address < 0x3F00) {
         uint16_t addr_wrapped = 0x2000 + (address % 0x1000); // wrap to 0x2000-0x2FFF
         uint16_t mirrored_addr = nes->mapper->mirror_nametable(nes->mapper, addr_wrapped);
-        uint16_t vram_index = (mirrored_addr - 0x2000) % VRAM_SIZE; // ensure within 2KB bounds
+        uint16_t vram_index = (mirrored_addr - 0x2000) % VRAM_SIZE; // subtract base and ensure within 2KB bounds
         nes->vram[vram_index] = value;
         return;
     }
