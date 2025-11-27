@@ -2301,6 +2301,8 @@ void handle_0xBB(CPU *cpu, uint8_t opcode) {
     return;
 }
 
+// ======== Interrupts ======== 
+
 void cpu_irq(CPU *cpu) { // HARDWARE interrupts 
     if (!(cpu->P & FLAG_INT)) {
         DEBUG_MSG_CPU("Hardware Interrupt Triggered");

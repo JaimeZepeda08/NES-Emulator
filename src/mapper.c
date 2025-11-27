@@ -45,9 +45,9 @@ Mapper *mapper_init(Cartridge *cart) {
         case 2:  // UxROM
             mapper_uxrom_init(mapper);
             break;
-        // case 4:  // MMC3
-        //     mapper = mapper_mmc3_init(mapper, cart);
-        //     break;
+        case 4:  // MMC3
+            mapper_mmc3_init(mapper);
+            break;
         
         default:
             FATAL_ERROR("Mapper", "Unsupported mapper ID: %d", cart->mapper_id);
