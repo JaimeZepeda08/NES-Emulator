@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
                                 step = !step; // Toggle step mode
                                 break;
                             case SDLK_p:
-                                running = nes_cycle(&last_time); // Run next instruction
+                                running = nes_cycle(&last_time, debug_enable); // Run next instruction
                                 break;
                             default:
                                 break;
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
 
             // run enough CPU cycles to simulate 1/60th of a second
             while (cycles_this_frame < CYCLES_PER_FRAME && running) {
-                running = nes_cycle(&last_time); 
+                running = nes_cycle(&last_time, debug_enable); 
                 cycles_this_frame += nes->cpu->cycles;    // get actual number of cycles run
 
                 // handle infitite loop edge case
@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
         // check for breakpoint
         if (debug_enable && nes->cpu->PC == breakpoint && !at_break) {
             printf("BREAKPOINT HIT at 0x%04X\nSTEP MODE Enabled [press `p` to run next instruction]\n", breakpoint);
-            step = !step;
+            step = 1;
             at_break = 1;
         } else if (debug_enable && nes->cpu->PC != breakpoint && at_break) {
             at_break = 0;

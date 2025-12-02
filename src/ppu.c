@@ -70,16 +70,12 @@ void ppu_free(PPU *ppu) {
 }
 
 int ppu_run_cycle(PPU *ppu) {
-    // debug
-    // printf("PPU scanline: %d, cycle: %d, VBlank: %d\n", ppu->scanline, ppu->cycle, (ppu->PPUSTATUS & PPUSTATUS_V) != 0);
-
     int frame_complete = 0;
 
     // ============ Pre render scanline ============
     // scan line -1 (261)
     if (ppu->scanline == -1) {
         if (ppu->cycle == 1) {
-            printf("PPU: Exiting VBlank at scanline: %d and cycle: %d\n", ppu->scanline, ppu->cycle);
             ppu->PPUSTATUS &= ~PPUSTATUS_V; // Clear VBlank flag after the frame is complete
             ppu->PPUSTATUS &= ~PPUSTATUS_S; // Clear Sprite 0 Hit mask for next frame
             ppu->PPUSTATUS &= ~PPUSTATUS_O; // Clear Sprite Overflow flag for next frame
@@ -236,7 +232,6 @@ int ppu_run_cycle(PPU *ppu) {
     if (ppu->scanline >= 241) {
         // VBlank flag is set at the second (cycle 1) tick of scanline 241
         if (ppu->scanline == 241 && ppu->cycle == 1) {
-            printf("PPU: Entering VBlank at scanline: %d and cycle: %d\n", ppu->scanline, ppu->cycle);
             ppu->PPUSTATUS |= PPUSTATUS_V; // Set VBlank flag
 
             // if NMI is enabled, blanking VBlank NMI occurs here too 
@@ -414,10 +409,6 @@ uint8_t ppu_register_read(PPU *ppu, uint16_t reg) {
         
         // Read
         case PPUSTATUS_REG: {
-            printf("Reading PPUSTATUS (0x2002) with value: %d register at scanline %d, cycle %d\n", 
-                ppu->PPUSTATUS & PPUSTATUS_V, 
-                ppu->scanline, 
-                ppu->cycle);
             uint8_t status = ppu->PPUSTATUS;
             // reading PPUSTATUS clears VBlank flag and resets w register 
             // this is done when the state of w may not be known 

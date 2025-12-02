@@ -1,4 +1,5 @@
 #include "../include/nes.h"
+#include "../include/log.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -70,7 +71,7 @@ void nes_free() {
     }
 }
 
-int nes_cycle(uint32_t *last_time) {
+int nes_cycle(uint32_t *last_time, int debug_enable) {
     // run cpu cycle (unless DMA in progress)
     if (nes->ppu->oam_dma_transfer == 0) {
         cpu_run_cycle(nes->cpu);
@@ -104,6 +105,21 @@ int nes_cycle(uint32_t *last_time) {
     }
 
     // APU cycle is called by the audio callback function
+
+    // display register values if in debug mode
+    if (debug_enable) {
+        DEBUG_MSG_CPU("CPU Registers: A=%02X X=%02X Y=%02X PC=%04X S=%02X P=%02X", 
+            nes->cpu->A, 
+            nes->cpu->X, 
+            nes->cpu->Y, 
+            nes->cpu->PC, 
+            nes->cpu->S, 
+            nes->cpu->P);
+        DEBUG_MSG_PPU("PPU Registers: PPUCTRL=%02X PPUMASK=%02X PPUSTATUS=%02X",
+            nes->ppu->PPUCTRL,
+            nes->ppu->PPUMASK,
+            nes->ppu->PPUSTATUS);
+    }
 
     return 1;
 }
