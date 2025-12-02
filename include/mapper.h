@@ -28,6 +28,10 @@ typedef struct Mapper {
     int mirroring; 
     uint16_t (*mirror_nametable)(struct Mapper *m, uint16_t address); // mapper specific nametable mirroring function
 
+    // IRQ flag (set by mapper, checked and cleared by CPU)
+    int irq;
+    void (*irq_clock)(struct Mapper *m); // IRQ clock function (if any)
+
 } Mapper;
 
 Mapper *mapper_init(Cartridge *cart);

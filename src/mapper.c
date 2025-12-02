@@ -30,9 +30,15 @@ Mapper *mapper_init(Cartridge *cart) {
 
     // set initial mirroring mode from cartridge
     mapper->mirroring = cart->mirroring;
-    
+
     // set default nametable mirroring function
     mapper->mirror_nametable = mirror_nametable; 
+
+    // initialize IRQ flag
+    mapper->irq = 0;
+    
+    // default irq func should do nothing
+    mapper->irq_clock = NULL;
 
     // initialize mapper specific stuff
     switch (cart->mapper_id) {

@@ -115,7 +115,18 @@ void cpu_run_cycle(CPU *cpu) {
     // handle NMI interrupt
     if (nes->ppu->nmi == 1 && cpu->service_int == 0) { 
         cpu->PC--; // decrement because we incremented when calling the function
+        cpu->service_int = 1; // signal that the interrupt is being serviced
         cpu_nmi(cpu);
+        nes->ppu->nmi = 0; // reset ppu's NMI flag
+        cpu->service_int = 0; // reset service flag
+        return;
+    }
+
+    // handle mapper IRQ interrupt 
+    if (nes->mapper->irq == 1) {
+        cpu->PC--; // decrement because we incremented when calling the function
+        cpu_irq(cpu);
+        nes->mapper->irq = 0; // clear IRQ flag after servicing
         return;
     }
 
@@ -1550,9 +1561,6 @@ void handle_0x40(CPU *cpu, uint8_t opcode) {
 
     // Set cycles
     cpu->cycles = 6;
-
-    nes->ppu->nmi = 0; // reset ppu's NMI flag
-    cpu->service_int = 0; // reset service flag
     return;
 }
         
@@ -2304,7 +2312,7 @@ void handle_0xBB(CPU *cpu, uint8_t opcode) {
 // ======== Interrupts ======== 
 
 void cpu_irq(CPU *cpu) { // HARDWARE interrupts 
-    if (!(cpu->P & FLAG_INT)) {
+    if (!(cpu->P & FLAG_INT)) {        
         DEBUG_MSG_CPU("Hardware Interrupt Triggered");
 
         // The return address is PC
@@ -2314,9 +2322,8 @@ void cpu_irq(CPU *cpu) { // HARDWARE interrupts
         stack_push(cpu, (return_addr >> 8) & 0xFF); // high byte
         stack_push(cpu, return_addr & 0xFF);        // low byte
 
-        // Push status register with Break flag set
-        uint8_t status_no_B = (cpu->P & ~FLAG_BREAK) | FLAG_UNUSED; 
-        stack_push(cpu, status_no_B);
+        uint8_t status = (cpu->P & ~FLAG_BREAK) | FLAG_UNUSED;
+        stack_push(cpu, status);
 
         // Set Interrupt Disable flag
         cpu->P |= FLAG_INT; 
@@ -2333,9 +2340,7 @@ void cpu_irq(CPU *cpu) { // HARDWARE interrupts
 
 void cpu_nmi(CPU *cpu) { // Non-Maskable Interrupt
     DEBUG_MSG_CPU("NMI Triggered");
-
-    cpu->service_int = 1; // signal that the interrupt is being serviced
-
+    
     // The return address is PC
     uint16_t return_addr = cpu->PC;
 
@@ -2343,8 +2348,7 @@ void cpu_nmi(CPU *cpu) { // Non-Maskable Interrupt
     stack_push(cpu, (return_addr >> 8) & 0xFF); // high byte
     stack_push(cpu, return_addr & 0xFF);        // low byte
 
-    uint8_t status = cpu->P & ~FLAG_BREAK;
-    status |= FLAG_UNUSED; 
+    uint8_t status = (cpu->P & ~FLAG_BREAK) | FLAG_UNUSED;
     stack_push(cpu, status);
 
     // Set Interrupt Disable flag

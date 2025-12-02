@@ -12,6 +12,8 @@ void mapper_mmc3_cpu_write(Mapper *m, uint16_t addr, uint8_t value);
 uint8_t mapper_mmc3_ppu_read(Mapper *m, uint16_t addr);
 void mapper_mmc3_ppu_write(Mapper *m, uint16_t addr, uint8_t value);
 
+void mapper_mmc3_irq_clock(Mapper *m);
+
 typedef struct regs_mmc3 {
     // ========= 0x8000-0x9FFE =========
     // even
@@ -40,9 +42,13 @@ typedef struct regs_mmc3 {
     int prg_ram_enable;  // active high
 
     // ========= 0xC000-0xDFFE =========
+    // even
+    uint8_t irq_latch;
 
     // ========= 0xE000-0xFFFE =========
+    int irq_en; // active high
 
+    uint8_t irq_counter;
 } regs_mmc3;
 
 void mapper_mmc3_init(Mapper *m) {
@@ -53,6 +59,9 @@ void mapper_mmc3_init(Mapper *m) {
 
     m->regs = (regs_mmc3 *)malloc(sizeof(regs_mmc3));
     memset(m->regs, 0, sizeof(regs_mmc3));
+
+    m->irq_clock = mapper_mmc3_irq_clock; 
+    m->irq = 1;
 }
 
 uint8_t mapper_mmc3_cpu_read(Mapper *m, uint16_t addr) {
@@ -191,27 +200,28 @@ void mapper_mmc3_cpu_write(Mapper *m, uint16_t addr, uint8_t value) {
         }
     } 
     else if (addr >= 0xC000 && addr < 0xE000) {
-        printf("MMC3 IRQ registers not implemented yet\n");
-        return;
         // odd
         if (addr & 0x01) {
-
+            // reload IRQ counter
+            regs->irq_counter = 0x00;
         } 
         // even
         else {
-
+            // set IRQ latch
+            regs->irq_latch = value;
         }
     } 
     else if (addr >= 0xE000 && addr <= 0xFFFF) {
-        printf("MMC3 IRQ registers not implemented yet\n");
-        return;
         // odd
         if (addr & 0x01) {
-
+            // enable IRQ
+            regs->irq_en = 1;
         } 
         // even
         else {
-
+            // disable IRQ and acknowledge any pending IRQ
+            regs->irq_en = 0;
+            m->irq = 0;
         }
     }
 }
@@ -439,6 +449,20 @@ void mapper_mmc3_ppu_write(Mapper *m, uint16_t addr, uint8_t value) {
             chr_addr = chr_addr % m->cart->chr_size;
             m->cart->chr_rom[chr_addr] = value;
             return;
+        }
+    }
+}
+
+void mapper_mmc3_irq_clock(Mapper *m) {
+    regs_mmc3 *regs = (regs_mmc3 *)m->regs; 
+
+    printf("register vals: latch=%02X counter=%02X en=%d\n", regs->irq_latch, regs->irq_counter, regs->irq_en);
+
+    if (regs->irq_en == 1) {
+        regs->irq_counter--;
+        if (regs->irq_counter < 0) {
+            regs->irq_counter = regs->irq_latch;
+            m->irq = 1; // trigger IRQ
         }
     }
 }

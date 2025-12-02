@@ -168,8 +168,7 @@ void load_rom(Cartridge *cart) {
         cart->prg_ram_size = 8192;  // Default to 8KB if not specified
     }
 
-    // allocate PRG RAM even if it is not battery-backed because some games still use ram
-    // these games give user a password to continue instead of saving state
+    // allocate ram
     cart->prg_ram = (uint8_t *)calloc(1, cart->prg_ram_size);
     if (!cart->prg_ram) {
         fclose(rom);
