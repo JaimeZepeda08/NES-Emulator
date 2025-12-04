@@ -501,6 +501,7 @@ uint8_t ppu_register_read(PPU *ppu, uint16_t reg) {
                 if ((mirrored_addr & 0x13) == 0x10) {
                     mirrored_addr &= ~0x10;
                 }
+                ppu->data_buffer = nes_ppu_read((ppu->v & 0x2FFF)); // fill buffer with normal VRAM read
                 ppu->PPUDATA = ppu->palette_ram[mirrored_addr];
             } else { // Normal VRAM read
                 // buffer data reads for one extra cycle
