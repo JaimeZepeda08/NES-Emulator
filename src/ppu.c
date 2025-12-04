@@ -7,8 +7,8 @@
 #include "../include/cpu.h"
 
 uint32_t calculate_pixel_color(PPU *ppu, int x, int y);
-uint32_t get_background_pixel(PPU *ppu, int *bg_transparent);
-uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite_hit, int bg_transparent);
+uint32_t get_background_pixel(PPU *ppu, int x, int y, int *bg_transparent);
+uint32_t get_sprite_pixel(PPU *ppu, int x, int y, int *sprite_hit, int bg_transparent);
 
 PPU *ppu_init() {
     printf("Initializing PPU...");
@@ -88,7 +88,7 @@ int ppu_run_cycle(PPU *ppu) {
     }
 
     // ============ Visible scanlines ============
-    if (ppu->scanline >= -1 && ppu->scanline < 240) {
+    if (ppu->scanline >= -1 && ppu->scanline <= 239) {
         // idle cycle at cycle 0
         if (ppu->cycle == 0) {}
 
@@ -275,18 +275,40 @@ int ppu_run_cycle(PPU *ppu) {
 uint32_t calculate_pixel_color(PPU *ppu, int x, int y) {
     int sprite_hit = 0;
     int bg_transparent = 0;
-    uint32_t bg_color = get_background_pixel(ppu, &bg_transparent);
-    uint32_t sprite_color = get_sprite_pixel(ppu, x, y, bg_color, &sprite_hit, bg_transparent);
+
+    uint32_t bg_color = get_background_pixel(ppu, x, y, &bg_transparent);
+    uint32_t sprite_color = get_sprite_pixel(ppu, x, y, &sprite_hit, bg_transparent);
+
+    // handle sprite 0 hit logic
     if (sprite_hit) {
-        ppu->PPUSTATUS |= PPUSTATUS_S;
+        if (ppu->PPUMASK & PPUMASK_s && ppu->PPUMASK & PPUMASK_b) { // both sprite and background rendering should be enabled
+            if (x < 255) { // should not happen on last pixel of scanline
+                if (x >= 8 || ((ppu->PPUMASK & PPUMASK_M) && (ppu->PPUMASK & PPUMASK_m))) { // check left 8 pixels sprite rendering
+                    if (ppu->scanline < 240) {
+                        ppu->PPUSTATUS |= PPUSTATUS_S;
+                    }
+                }
+            }
+        }
     }
+
     return sprite_color != 0 ? sprite_color : bg_color;
 }
 
-uint32_t get_background_pixel(PPU *ppu, int *bg_transparent) {
+uint32_t get_background_pixel(PPU *ppu, int x, int y, int *bg_transparent) {
+    (void)y; // unused parameter
+
     if (!(ppu->PPUMASK & PPUMASK_b)) {
         // background rendering is disabled
         return 0x000000FF;
+    }
+
+    if (x < 8 && !(ppu->PPUMASK & PPUMASK_m)) {
+        // left 8 pixels background rendering is disabled
+        uint8_t color_id = ppu->palette_ram[0]; // background color
+        *bg_transparent = 1;
+        SDL_Color sdl_bg_color = nes_palette[color_id];
+        return (sdl_bg_color.r << 24) | (sdl_bg_color.g << 16) | (sdl_bg_color.b << 8) | 0xFF;
     }
 
     // get the bit corresponding to the current fine x scroll
@@ -315,9 +337,14 @@ uint32_t get_background_pixel(PPU *ppu, int *bg_transparent) {
     return (sdl_bg_color.r << 24) | (sdl_bg_color.g << 16) | (sdl_bg_color.b << 8) | 0xFF;
 }
 
-uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite_hit, int bg_transparent) {
+uint32_t get_sprite_pixel(PPU *ppu, int x, int y, int *sprite_hit, int bg_transparent) {    
     if (!(ppu->PPUMASK & PPUMASK_s)) {
         // sprite rendering is disabled
+        return 0x00000000; // transparent
+    }
+
+    if (x < 8 && !(ppu->PPUMASK & PPUMASK_M)) {
+        // left 8 pixels sprite rendering is disabled
         return 0x00000000; // transparent
     }
 
@@ -342,7 +369,7 @@ uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite
 
         // calculate pixel within sprite
         int sx = x - sprite_x;
-        int sy = y - sprite_y;
+        int sy = y - sprite_y;  
 
         // handle horizontal flipping
         if (attr & 0x40) { 
@@ -409,7 +436,7 @@ uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite
         }
 
         // handle sprite 0 hit logic
-        if (i == 0 && color_id != 0 && ((bg_color >> 24) & 0xFF) != 0) {
+        if (i == 0 && color_id != 0 && !bg_transparent) {
             *sprite_hit = 1;
         }         
     }
