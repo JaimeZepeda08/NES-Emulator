@@ -184,6 +184,21 @@ int ppu_run_cycle(PPU *ppu) {
             }
         }
 
+        // Sprite evaluation for next scanline
+        if (ppu->cycle == 257) {
+            int sprite_count = 0;
+            for (int i = 0; i < 64; i++) {
+                int diff = ppu->scanline - ppu->oam[i*4];
+                int height = (ppu->PPUCTRL & PPUCNTRL_H) ? 16 : 8;
+                if (diff >= 0 && diff < height) {
+                    sprite_count++;
+                }
+            }
+            if (sprite_count > 8) {
+                ppu->PPUSTATUS |= PPUSTATUS_O;
+            }
+        }
+
         // OAMADDR reset
         if (ppu->cycle >= 257 && ppu->cycle <= 320) {
             ppu->OAMADDR = 0;
@@ -339,10 +354,20 @@ uint32_t get_sprite_pixel(PPU *ppu, int x, int y, uint32_t bg_color, int *sprite
         }
 
         // fetch tile data
-        uint16_t pattern_table = (ppu->PPUCTRL & PPUCNTRL_S) ? 0x1000 : 0x0000;
-        uint16_t tile_addr = pattern_table + tile_index * 16;
-        if (sprite_height == 16) {
-            tile_addr = (tile_index & 0xFE) * 16 + ((tile_index & 1) ? 0x1000 : 0x0000);
+        uint16_t tile_addr;
+        if (sprite_height == 8) {
+            uint16_t pattern_table = (ppu->PPUCTRL & PPUCNTRL_S) ? 0x1000 : 0x0000;
+            tile_addr = pattern_table + tile_index * 16;
+        } else { // 8x16 sprite mode
+            uint16_t pattern_table = (tile_index & 1) ? 0x1000 : 0x0000;
+            uint8_t tile_idx_8x16 = tile_index & 0xFE;
+
+            if (sy < 8) { // top half of 8x16 sprite
+                tile_addr = pattern_table + tile_idx_8x16 * 16;
+            } else { // bottom half of 8x16 sprite
+                tile_addr = pattern_table + (tile_idx_8x16 + 1) * 16;
+                sy -= 8;
+            }
         }
 
         // get the two bitplanes for the pixel
