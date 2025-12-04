@@ -162,6 +162,16 @@ int main(int argc, char *argv[]) {
                 if (nes->cpu->cycles == 0) {
                     cycles_this_frame++;
                 }
+
+                // check for breakpoint
+                if (debug_enable && nes->cpu->PC == breakpoint && !at_break) {
+                    printf("BREAKPOINT HIT at 0x%04X\nSTEP MODE Enabled [press `p` to run next instruction]\n", breakpoint);
+                    step = 1;
+                    at_break = 1;
+                    break;
+                } else if (debug_enable && nes->cpu->PC != breakpoint && at_break) {
+                    at_break = 0;
+                }
             }
 
             uint32_t frame_end = SDL_GetTicks();
@@ -171,15 +181,15 @@ int main(int argc, char *argv[]) {
                 // delay if its running too fast (limit to ~60 FPS)
                 SDL_Delay((Uint32)(target_ms - elapsed_ms));
             }
-        }
-
-        // check for breakpoint
-        if (debug_enable && nes->cpu->PC == breakpoint && !at_break) {
-            printf("BREAKPOINT HIT at 0x%04X\nSTEP MODE Enabled [press `p` to run next instruction]\n", breakpoint);
-            step = 1;
-            at_break = 1;
-        } else if (debug_enable && nes->cpu->PC != breakpoint && at_break) {
-            at_break = 0;
+        } else {
+            // check for breakpoint
+            if (debug_enable && nes->cpu->PC == breakpoint && !at_break) {
+                printf("BREAKPOINT HIT at 0x%04X\nSTEP MODE Enabled [press `p` to run next instruction]\n", breakpoint);
+                step = 1;
+                at_break = 1;
+            } else if (debug_enable && nes->cpu->PC != breakpoint && at_break) {
+                at_break = 0;
+            }
         }
     }
 
