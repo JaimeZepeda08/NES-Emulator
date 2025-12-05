@@ -6,7 +6,7 @@
 #include "ppu.h"
 #include "cpu.h"
 
-#define SCALE_FACTOR 2.5
+#define SCALE_FACTOR 2.8
 
 #define GAME_WIDTH  ((int)(NES_WIDTH * SCALE_FACTOR))
 #define GAME_HEIGHT ((int)(NES_HEIGHT * SCALE_FACTOR))
