@@ -106,29 +106,25 @@ void cpu_free(CPU *cpu) {
 }
 
 void cpu_run_cycle(CPU *cpu) {
+    // handle NMI interrupt
+    if (nes->ppu->nmi == 1 && cpu->service_int == 0) { 
+        cpu_nmi(cpu);
+        nes->ppu->nmi = 0; // reset NMI flag
+        return;
+    }
+
+    // handle mapper IRQ interrupt 
+    if (nes->mapper->irq == 1 && cpu->service_int == 0) {
+        cpu_irq(cpu);
+        nes->mapper->irq = 0; // reset irq flag
+        return;
+    }
+
     // fetch next opcode
     uint8_t opcode = nes_cpu_read(cpu->PC++);
 
     cpu->cycles = 0;
     cpu->page_crossed = 0;
-
-    // handle NMI interrupt
-    if (nes->ppu->nmi == 1 && cpu->service_int == 0) { 
-        cpu->PC--; // decrement because we incremented when calling the function
-        cpu->service_int = 1; // signal that the interrupt is being serviced
-        cpu_nmi(cpu);
-        nes->ppu->nmi = 0; // reset ppu's NMI flag
-        cpu->service_int = 0; // reset service flag
-        return;
-    }
-
-    // handle mapper IRQ interrupt 
-    if (nes->mapper->irq == 1) {
-        cpu->PC--; // decrement because we incremented when calling the function
-        cpu_irq(cpu);
-        nes->mapper->irq = 0; // clear IRQ flag after servicing
-        return;
-    }
 
     // execute instruction
     opcode_table[opcode](cpu, opcode);
@@ -1513,6 +1509,8 @@ void handle_0x60(CPU *cpu, uint8_t opcode) {
 void handle_0x00(CPU *cpu, uint8_t opcode) {
     DEBUG_MSG_CPU("Executing instruction [BRK]: %02X", opcode);
 
+    cpu->service_int = 1; // set service flag to prevent other interrupts during BRK handling
+
     // The return address is PC + 2
     uint16_t return_addr = cpu->PC + 2;
 
@@ -1561,6 +1559,8 @@ void handle_0x40(CPU *cpu, uint8_t opcode) {
 
     // Set cycles
     cpu->cycles = 6;
+
+    cpu->service_int = 0; // reset service flag
     return;
 }
         
@@ -2315,6 +2315,8 @@ void cpu_irq(CPU *cpu) { // HARDWARE interrupts
     if (!(cpu->P & FLAG_INT)) {        
         DEBUG_MSG_CPU("Hardware Interrupt Triggered");
 
+        cpu->service_int = 1; // signal that the interrupt is being serviced
+
         // The return address is PC
         uint16_t return_addr = cpu->PC;
 
@@ -2340,6 +2342,8 @@ void cpu_irq(CPU *cpu) { // HARDWARE interrupts
 
 void cpu_nmi(CPU *cpu) { // Non-Maskable Interrupt
     DEBUG_MSG_CPU("NMI Triggered");
+
+    cpu->service_int = 1; // signal that the interrupt is being serviced
     
     // The return address is PC
     uint16_t return_addr = cpu->PC;
