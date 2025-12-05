@@ -4,7 +4,6 @@
 #include "../../include/log.h"
 
 #define MMC3_CHR_BANK_SIZE_8K 8192      // 8KB
-#define MMC3_CHR_BANK_SIZE_2K 2048      // 2KB
 #define MMC3_CHR_BANK_SIZE_1K 1024      // 1KB
 
 uint8_t mapper_mmc3_cpu_read(Mapper *m, uint16_t addr);
@@ -61,7 +60,7 @@ void mapper_mmc3_init(Mapper *m) {
     memset(m->regs, 0, sizeof(regs_mmc3));
 
     m->irq_clock = mapper_mmc3_irq_clock; 
-    m->irq = 1;
+    m->irq = 0;
 }
 
 uint8_t mapper_mmc3_cpu_read(Mapper *m, uint16_t addr) {
@@ -174,11 +173,11 @@ void mapper_mmc3_cpu_write(Mapper *m, uint16_t addr, uint8_t value) {
         // even
         else {
             // bank select
-            regs->bank_select = addr & 0x07; // first 3 bits
+            regs->bank_select = value & 0x07; // first 3 bits
             // PRG ROM bank mode
-            regs->prg_rom_bank_mode = (addr >> 6) & 0x01; // bit 6
+            regs->prg_rom_bank_mode = (value >> 6) & 0x01; // bit 6
             // CHR bank mode
-            regs->chr_bank_mode = (addr >> 7) & 0x01; // bit 7
+            regs->chr_bank_mode = (value >> 7) & 0x01; // bit 7
         }
     } 
     else if (addr >= 0xA000 && addr < 0xC000) {
@@ -232,18 +231,18 @@ uint8_t mapper_mmc3_ppu_read(Mapper *m, uint16_t addr) {
     if (regs->chr_bank_mode == 0) {
         // two 2KB banks at 0x0000-0x0FFF, four 1KB banks at 0x1000-0x1FFF
         if (addr >= 0x0000 && addr < 0x0800) {
-            // first 2KB bank
-            uint8_t bank = regs->R0;
+            // first 2KB bank 
+            uint8_t bank = regs->R0 & 0xFE; 
             uint16_t offset = addr - 0x0000;
-            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_2K) + offset;
+            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_1K) + offset;  
             chr_addr = chr_addr % m->cart->chr_size;
             return m->cart->chr_rom[chr_addr];
         } 
         else if (addr >= 0x0800 && addr < 0x1000) {
-            // second 2KB bank
-            uint8_t bank = regs->R1;
+            // second 2KB bank 
+            uint8_t bank = regs->R1 & 0xFE;  
             uint16_t offset = addr - 0x0800;
-            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_2K) + offset;
+            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_1K) + offset;  
             chr_addr = chr_addr % m->cart->chr_size;
             return m->cart->chr_rom[chr_addr];
         } 
@@ -316,17 +315,17 @@ uint8_t mapper_mmc3_ppu_read(Mapper *m, uint16_t addr) {
         } 
         else if (addr >= 0x1000 && addr < 0x1800) {
             // first 2KB bank
-            uint8_t bank = regs->R1;
+            uint8_t bank = regs->R0 & 0xFE;
             uint16_t offset = addr - 0x1000;
-            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_2K) + offset;
+            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_1K) + offset;
             chr_addr = chr_addr % m->cart->chr_size;
             return m->cart->chr_rom[chr_addr];
         }
         else if (addr >= 0x1800 && addr < 0x2000) {
             // second 2KB bank
-            uint8_t bank = regs->R2;
+            uint8_t bank = regs->R1 & 0xFE;
             uint16_t offset = addr - 0x1800;
-            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_2K) + offset;
+            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_1K) + offset;
             chr_addr = chr_addr % m->cart->chr_size;
             return m->cart->chr_rom[chr_addr];
         }
@@ -342,18 +341,18 @@ void mapper_mmc3_ppu_write(Mapper *m, uint16_t addr, uint8_t value) {
         // two 2KB banks at 0x0000-0x0FFF, four 1KB banks at 0x1000-0x1FFF
         if (addr >= 0x0000 && addr < 0x0800) {
             // first 2KB bank
-            uint8_t bank = regs->R0;
+            uint8_t bank = regs->R0 & 0xFE; 
             uint16_t offset = addr - 0x0000;
-            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_2K) + offset;
+            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_1K) + offset;  
             chr_addr = chr_addr % m->cart->chr_size;
             m->cart->chr_rom[chr_addr] = value;
             return;
         } 
         else if (addr >= 0x0800 && addr < 0x1000) {
             // second 2KB bank
-            uint8_t bank = regs->R1;
+            uint8_t bank = regs->R1 & 0xFE;
             uint16_t offset = addr - 0x0800;
-            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_2K) + offset;
+            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_1K) + offset;
             chr_addr = chr_addr % m->cart->chr_size;
             m->cart->chr_rom[chr_addr] = value;
             return;
@@ -434,18 +433,18 @@ void mapper_mmc3_ppu_write(Mapper *m, uint16_t addr, uint8_t value) {
         } 
         else if (addr >= 0x1000 && addr < 0x1800) {
             // first 2KB bank
-            uint8_t bank = regs->R1;
+            uint8_t bank = regs->R0 & 0xFE;
             uint16_t offset = addr - 0x1000;
-            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_2K) + offset;
+            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_1K) + offset;
             chr_addr = chr_addr % m->cart->chr_size;
             m->cart->chr_rom[chr_addr] = value;
             return;
         }
         else if (addr >= 0x1800 && addr < 0x2000) {
             // second 2KB bank
-            uint8_t bank = regs->R2;
+            uint8_t bank = regs->R1 & 0xFE;
             uint16_t offset = addr - 0x1800;
-            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_2K) + offset;
+            uint32_t chr_addr = (bank * MMC3_CHR_BANK_SIZE_1K) + offset;
             chr_addr = chr_addr % m->cart->chr_size;
             m->cart->chr_rom[chr_addr] = value;
             return;
@@ -456,13 +455,14 @@ void mapper_mmc3_ppu_write(Mapper *m, uint16_t addr, uint8_t value) {
 void mapper_mmc3_irq_clock(Mapper *m) {
     regs_mmc3 *regs = (regs_mmc3 *)m->regs; 
 
-    printf("register vals: latch=%02X counter=%02X en=%d\n", regs->irq_latch, regs->irq_counter, regs->irq_en);
-
-    if (regs->irq_en == 1) {
+    if (regs->irq_counter == 0) {
+        regs->irq_counter = regs->irq_latch;
+    } else {
         regs->irq_counter--;
-        if (regs->irq_counter < 0) {
-            regs->irq_counter = regs->irq_latch;
-            m->irq = 1; // trigger IRQ
+        if (regs->irq_counter == 0 && regs->irq_latch != 0) {
+            if (regs->irq_en) {
+                m->irq = 1; // trigger IRQ
+            }
         }
     }
 }
