@@ -397,6 +397,11 @@ uint32_t get_sprite_pixel(PPU *ppu, int x, int y, int *sprite_hit, int bg_transp
             continue;
         }
 
+        // handle sprite 0 hit logic 
+        if (i == 0 && !bg_transparent) {
+            *sprite_hit = 1;
+        }
+
         // get palette color
         uint8_t palette_index = 0x10 + ((attr & 0x03) << 2) + color_id;
         uint16_t palette_addr = palette_index & 0x1F;
@@ -414,16 +419,15 @@ uint32_t get_sprite_pixel(PPU *ppu, int x, int y, int *sprite_hit, int bg_transp
             if (bg_transparent) {
                 // background pixel is transparent
                 sprite_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
-            } 
+                break; // first sprite is rendered
+            } else {
+                return 0x00000000; // background pixel is opaque, sprite not rendered
+            }
         } else {
             // in front of background
             sprite_color = (color.r << 24) | (color.g << 16) | (color.b << 8) | 0xFF;
-        }
-
-        // handle sprite 0 hit logic
-        if (i == 0 && color_id != 0 && !bg_transparent) {
-            *sprite_hit = 1;
-        }         
+            break; // first sprite is rendered
+        }      
     }
 
     return sprite_color;
